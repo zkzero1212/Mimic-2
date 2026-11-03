@@ -2413,12 +2413,45 @@
         // Key bindings
         let lastCKeyTime = 0;
         window.addEventListener('keydown', (e) => {
-            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            // 운영체제/브라우저 단축키와 글 작성 중 키 입력은 절대로 게임 조작으로 취급하지 않습니다.
+            // 특히 Ctrl+X가 전체 추리 표시 초기화로 이어지지 않게 합니다.
+            const focused = e.target instanceof Element ? e.target : document.activeElement;
+            if (e.isComposing || e.key === 'Process' || e.ctrlKey || e.metaKey || e.altKey) return;
+            if (focused && (
+                ['INPUT', 'TEXTAREA', 'SELECT'].includes(focused.tagName)
+                || focused.isContentEditable
+                || focused.closest('[role="textbox"]')
+            )) return;
             const pressedKey = e.key.toLowerCase();
 
             if (pressedKey === 'escape' && contextPalette && !contextPalette.hidden) {
                 e.preventDefault();
                 closeStatementContextPalette();
+                return;
+            }
+
+            // 우클릭 팔레트가 열려 있으면 전역 X(모두 초기화), C, Z, R 등은 실행하지 않습니다.
+            // 상자 팔레트에서는 Q/W/E와 1~5만 그 상자에 직접 적용합니다.
+            if (contextPalette && !contextPalette.hidden) {
+                if (!e.repeat && contextTarget?.kind === 'chest' && !isGameOver) {
+                    const idx = contextTarget.idx;
+                    const chest = chestsData[idx];
+                    if (chest && !chest.isOpen) {
+                        const markKeys = { q: 'O', w: 'X', e: '?' };
+                        if (Object.hasOwn(markKeys, pressedKey)) {
+                            e.preventDefault();
+                            toggleMark(idx, markKeys[pressedKey]);
+                            updateStatementContextPalette();
+                            return;
+                        }
+                        if (['1','2','3','4','5'].includes(pressedKey)) {
+                            e.preventDefault();
+                            toggleMemo(idx, Number(pressedKey));
+                            updateStatementContextPalette();
+                            return;
+                        }
+                    }
+                }
                 return;
             }
             if (pressedKey === 'escape' && linkRecolorPending) {
@@ -2452,14 +2485,15 @@
             }
 
             if (pressedKey === 'r') {
+                if (e.repeat) return;
                 e.preventDefault(); e.stopPropagation();
                 if (isGameOver) {
                     if (isFloorCleared) btnNextFloor.click(); else btnRestart.click();
                 }
                 return;
             }
-            if (pressedKey === 'z') { e.preventDefault(); btnOpenO.click(); return; }
-            if (pressedKey === 'x') { e.preventDefault(); btnClearMarks.click(); return; }
+            if (pressedKey === 'z') { e.preventDefault(); if (!e.repeat) btnOpenO.click(); return; }
+            if (pressedKey === 'x') { e.preventDefault(); if (!e.repeat) btnClearMarks.click(); return; }
             
             if (pressedKey === 'c') {
                 e.preventDefault(); if (e.repeat) return;
@@ -2478,7 +2512,7 @@
                 return;
             }
 
-            if (hoveredChestIdx !== null && !isGameOver && !chestsData[hoveredChestIdx].isOpen) {
+            if (!e.repeat && hoveredChestIdx !== null && !isGameOver && !chestsData[hoveredChestIdx].isOpen) {
                 if (pressedKey === 'q') { e.preventDefault(); toggleMark(hoveredChestIdx, 'O'); }
                 else if (pressedKey === 'w') { e.preventDefault(); toggleMark(hoveredChestIdx, 'X'); }
                 else if (pressedKey === 'e') { e.preventDefault(); toggleMark(hoveredChestIdx, '?'); }
