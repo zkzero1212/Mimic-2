@@ -34,7 +34,7 @@
                 <h3 class="v2-info-heading text-[11px] font-bold text-slate-700 uppercase tracking-tight border-b border-slate-200 pb-1 flex flex-col items-center gap-1 text-center">
                     <span>현재 층 정보</span>
                     <!-- Build policy: v0.07a ... v0.07z, v0.07aa ... then v0.08 major. -->
-                    <span id="game-version" class="v2-build-version" title="현재 미믹 V2 개발 빌드">BUILD v0.07h</span>
+                    <span id="game-version" class="v2-build-version" title="현재 미믹 V2 개발 빌드">BUILD v0.07i</span>
                     <span class="text-[9px] font-extrabold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">최고 <span id="ui-max-floor">1</span>F</span>
                 </h3>
                 
@@ -220,6 +220,21 @@
                 <button type="button" id="context-clear-marks" class="v2-context-erase">마킹·메모 지우개</button>
             </div>
             <p class="v2-context-keyhint">단축키 Q/W/E · 1~5 · Esc 닫기</p>
+        </div>
+    </div>
+
+    <!-- v0.07i: Clear / defeat screen with actionable next-step controls. -->
+    <div id="floor-result-overlay" class="v2-floor-result-overlay" role="dialog" aria-modal="true" aria-labelledby="floor-result-title" hidden>
+        <div class="v2-floor-result-card" data-result="clear">
+            <span class="v2-result-emblem" aria-hidden="true">✦</span>
+            <span id="floor-result-eyebrow" class="v2-result-eyebrow">FLOOR CLEARED</span>
+            <h2 id="floor-result-title">층 클리어</h2>
+            <p id="floor-result-description">모든 진짜 보물을 찾아냈습니다.</p>
+            <div class="v2-result-actions">
+                <button id="floor-result-primary" type="button">다음 층으로</button>
+                <button id="floor-result-review" type="button">게임판 정답 확인</button>
+            </div>
+            <span class="v2-result-footnote">ESC · 게임판 확인</span>
         </div>
     </div>
 
