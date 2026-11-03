@@ -158,11 +158,11 @@ header p { color: #d6c1a5 !important; font-family: monospace; }
   border: 1px solid #a97854;
   background: #302326;
 }
-.grid.grid-cols-1.lg\\:grid-cols-12 {
+.grid.grid-cols-1.lg\:grid-cols-12 {
   grid-template-columns: minmax(0, 1fr) 292px !important;
   gap: 18px !important;
 }
-.lg\\:col-span-10 {
+.lg\:col-span-10 {
   padding: 16px 18px 22px !important;
   min-height: 620px;
   background: linear-gradient(145deg,#86513f,#704638) !important;
@@ -214,9 +214,9 @@ header p { color: #d6c1a5 !important; font-family: monospace; }
 #right-control-panel h3 { align-self: start; }
 @media (max-width: 900px) {
   header { margin-bottom: 12px !important; }
-  .grid.grid-cols-1.lg\\:grid-cols-12 { grid-template-columns: minmax(0,1fr) !important; }
+  .grid.grid-cols-1.lg\:grid-cols-12 { grid-template-columns: minmax(0,1fr) !important; }
   #left-info-panel { position: static; grid-column: 1 !important; grid-row: 2 !important; min-height: 0; }
-  .lg\\:col-span-10 { grid-column: 1 !important; grid-row: 1 !important; min-height: 0; }
+  .lg\:col-span-10 { grid-column: 1 !important; grid-row: 1 !important; min-height: 0; }
   #right-control-panel { grid-column: 1 !important; grid-row: 3 !important; }
   #chests-container { min-height: 380px !important; }
 }
