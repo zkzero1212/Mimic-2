@@ -1252,3 +1252,36 @@ header p { display:none !important; }
   #chests-container .v2-chest-sprite.v2-chest-reveal-flash::after,
   .v2-floor-result-card {animation:none !important;}
 }
+
+/* v0.07j: use the approved 128px transparent sprites, at half-size on desktop.
+   Preserve the chest hitbox and inline O/X/?/memo outlines. */
+#chests-container .v2-board-item .v2-chest-sprite {
+  width: 76px;
+  height: 74px;
+  min-width: 76px;
+  min-height: 74px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+  position: relative;
+  box-shadow: none;
+  overflow: visible;
+  appearance: none;
+}
+#chests-container .v2-board-item .v2-chest-sprite::before {
+  content: none !important;
+  display: none !important;
+}
+#chests-container .v2-board-item .v2-chest-pixel-art {
+  width: 64px;
+  height: 64px;
+  display: block;
+  flex: 0 0 auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
