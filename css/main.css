@@ -372,3 +372,12 @@ header p { display:none !important; }
 }
 .v2-link-color-option:focus-visible { outline:2px solid #fff1c1; outline-offset:2px; }
 @media (prefers-reduced-motion:reduce) { .v2-link-color-option { transition:none; } }
+
+/* v0.05 — connector editing: pointer-safe hit area and one-shot recolor mode */
+.v2-statement-link-visible { pointer-events:none; }
+.v2-statement-link-hit { pointer-events:stroke !important; cursor:pointer; }
+.v2-link-color-option.is-recolor-pending {
+    outline:2px dashed var(--link-swatch);
+    outline-offset:2px;
+}
+.v2-link-color-hint { flex-basis:100%; text-align:center; font:11px/1.4 monospace; color:#e4caa8; }
