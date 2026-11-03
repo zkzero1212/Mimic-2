@@ -1,7 +1,7 @@
 // --- Cloud Sync Bridge ---
         window.getGameState = () => {
             return {
-                currentFloor, maxFloor, permCurses, eventState, statementLinks,
+                currentFloor, maxFloor, permCurses, eventState, statementLinks, selectedLinkColor,
                 bossRewardRulesVersion: 3,
                 segmentChestBonus, segmentMimicBonus, bossRewardsClaimedFloors,
                 chestsData, currentGridLayout, totalOpened, totalTrueChests, isGameOver, isFloorCleared,
@@ -11,7 +11,19 @@
         };
 
         window.loadGameState = (data) => {
-            statementLinks = Array.isArray(data.statementLinks) ? data.statementLinks.filter(link => Array.isArray(link) && link.length === 2 && link.every(Number.isInteger)) : [];
+            // 구버전 [발언, 상자] 연결 기록은 금색 선으로 복원합니다.
+            const savedLinks = Array.isArray(data.statementLinks)
+                ? data.statementLinks : Object.values(data.statementLinks || {});
+            statementLinks = savedLinks.map(link => {
+                if (!link || typeof link !== "object") return null;
+                const from = Number(link[0]);
+                const to = Number(link[1]);
+                if (!Number.isInteger(from) || from < 0 || !Number.isInteger(to) || to < 0) return null;
+                const color = Object.hasOwn(LINK_COLORS, link[2]) ? link[2] : "gold";
+                return [from, to, color];
+            }).filter(Boolean);
+            selectedLinkColor = Object.hasOwn(LINK_COLORS, data.selectedLinkColor) ? data.selectedLinkColor : "gold";
+            refreshLinkColorPicker();
             selectedStatementIdx = null;
             currentFloor = Math.max(1, Number(data.currentFloor) || 1);
             maxFloor = Math.max(1, Number(data.maxFloor) || 1);
@@ -147,8 +159,31 @@
         let totalOpened = 0;
         let totalTrueChests = 0;
         let hoveredChestIdx = null;
+        const LINK_COLORS = Object.freeze({
+            gold: "#ffe18a",
+            mint: "#5eead4",
+            violet: "#c4b5fd",
+            coral: "#fb7185"
+        });
         let statementLinks = [];
         let selectedStatementIdx = null;
+        let selectedLinkColor = "gold";
+        function refreshLinkColorPicker() {
+            document.querySelectorAll("#link-color-picker [data-link-color]").forEach(button => {
+                const active = button.dataset.linkColor === selectedLinkColor;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-pressed", String(active));
+            });
+        }
+        document.querySelectorAll("#link-color-picker [data-link-color]").forEach(button => {
+            button.addEventListener("click", () => {
+                const color = button.dataset.linkColor;
+                if (!Object.hasOwn(LINK_COLORS, color)) return;
+                selectedLinkColor = color;
+                refreshLinkColorPicker();
+                if (window.autoSaveToCloud) window.autoSaveToCloud();
+            });
+        });
 
         const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
         const colorHex = { red: '#ef4444', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308', purple: '#a855f7' };
@@ -1546,7 +1581,7 @@
             svg.setAttribute("height", String(height));
             svg.setAttribute("aria-hidden", "true");
             svg.classList.add("v2-statement-links-layer");
-            statementLinks.forEach(([from, to]) => {
+            statementLinks.forEach(([from, to, color = "gold"]) => {
                 const source = rowsWrapper.querySelector(`.v2-speech-card[data-statement-index="${from}"]`);
                 const target = rowsWrapper.querySelector(`.v2-chest-sprite[data-chest-index="${to}"]`);
                 if (!source || !target) return;
@@ -1560,7 +1595,7 @@
                 const path = document.createElementNS(svgNS, "path");
                 path.setAttribute("d", `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`);
                 path.setAttribute("fill", "none");
-                path.setAttribute("stroke", "#ffe18a");
+                path.setAttribute("stroke", LINK_COLORS[color] || LINK_COLORS.gold);
                 path.setAttribute("stroke-width", "3");
                 path.setAttribute("stroke-linecap", "round");
                 path.setAttribute("stroke-dasharray", "7 5");
@@ -1637,10 +1672,21 @@
         function toggleStatementLink(from, to) {
             if (isGameOver || from === to || !chestsData[from] || !chestsData[to]) return;
             const existing = statementLinks.findIndex(link => link[0] === from && link[1] === to);
-            if (existing >= 0) statementLinks.splice(existing, 1);
-            else statementLinks.push([from, to]);
+            let message;
+            if (existing >= 0) {
+                if (statementLinks[existing][2] === selectedLinkColor) {
+                    statementLinks.splice(existing, 1);
+                    message = "발언-상자 연결을 해제했습니다.";
+                } else {
+                    statementLinks[existing][2] = selectedLinkColor;
+                    message = "기존 연결선의 색상을 변경했습니다.";
+                }
+            } else {
+                statementLinks.push([from, to, selectedLinkColor]);
+                message = "선택한 색상으로 발언과 상자를 연결했습니다.";
+            }
             selectedStatementIdx = null;
-            statusMsg.innerText = existing >= 0 ? "발언-상자 연결을 해제했습니다." : "발언과 상자를 연결했습니다.";
+            statusMsg.innerText = message;
             statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
             renderChests();
             if (window.autoSaveToCloud) window.autoSaveToCloud();
