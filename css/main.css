@@ -344,3 +344,31 @@ header p { display:none !important; }
   position: absolute; inset: 0; z-index: 30; overflow: visible; pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) { .v2-speech-card { transition: none; } }
+
+/* v0.05: four per-line connection colors, independent from centered board sizing. */
+.v2-link-color-picker {
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:7px; width:100%; margin:0 auto 10px; padding:7px 8px;
+    box-sizing:border-box; border:2px solid #80503d; border-radius:3px;
+    background:#302326; font: bold 12px monospace; color:#f1dbbb;
+}
+.v2-link-color-title { margin-right:5px; white-space:nowrap; }
+.v2-link-color-option {
+    display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    min-height:32px; padding:5px 9px; cursor:pointer;
+    font:inherit; color:#e9d5b7; background:#49302e;
+    border:2px solid #80503d; border-radius:3px;
+    transition:border-color .12s ease, background-color .12s ease;
+}
+.v2-link-color-dot {
+    display:inline-block; width:13px; height:13px; flex-shrink:0;
+    background:var(--link-swatch); border:1px solid #1a1516;
+    box-shadow:0 0 0 1px rgba(255,255,255,.15);
+}
+.v2-link-color-option:hover { background:#5b3c37; border-color:var(--link-swatch); }
+.v2-link-color-option.is-active {
+    border-color:var(--link-swatch); background:#241b20; color:#fff7e9;
+    box-shadow:inset 0 0 0 1px var(--link-swatch);
+}
+.v2-link-color-option:focus-visible { outline:2px solid #fff1c1; outline-offset:2px; }
+@media (prefers-reduced-motion:reduce) { .v2-link-color-option { transition:none; } }
