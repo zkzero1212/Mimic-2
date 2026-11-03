@@ -1711,6 +1711,18 @@
                 const color = Object.hasOwn(LINK_COLORS, savedColor) ? savedColor : "gold";
                 const isSelected = selectedLineLink?.[0] === from && selectedLineLink?.[1] === to;
 
+                // Solid black outline underneath each colored connection (both normal and selected).
+                const outline = document.createElementNS(ns, "path");
+                outline.setAttribute("d", d);
+                outline.setAttribute("fill", "none");
+                outline.setAttribute("stroke", "#0b0a0e");
+                outline.setAttribute("stroke-width", isSelected ? "7.5" : "5");
+                outline.setAttribute("stroke-linecap", "round");
+                outline.setAttribute("pointer-events", "none");
+                outline.classList.add("v2-statement-link-outline");
+                if (isSelected) outline.classList.add("is-selected");
+                svg.appendChild(outline);
+
                 const origin = document.createElementNS(ns, "circle");
                 origin.setAttribute("cx", String(x1));
                 origin.setAttribute("cy", String(y1));
@@ -1739,10 +1751,10 @@
                 pulse.setAttribute("pathLength", "100");
                 pulse.setAttribute("fill", "none");
                 pulse.setAttribute("stroke", "#fffdf4");
-                pulse.setAttribute("stroke-width", isSelected ? "5" : "4");
+                pulse.setAttribute("stroke-width", isSelected ? "3.2" : "2.5");
                 pulse.setAttribute("stroke-linecap", "round");
-                pulse.setAttribute("stroke-dasharray", "9 120");
-                pulse.setAttribute("stroke-dashoffset", "9");
+                pulse.setAttribute("stroke-dasharray", "5 120");
+                pulse.setAttribute("stroke-dashoffset", "5");
                 pulse.setAttribute("pointer-events", "none");
                 pulse.classList.add("v2-statement-link-pulse");
                 // 다수의 선이 동시에 번쩍이지 않도록 간단한 시간차만 적용합니다.
@@ -1784,10 +1796,14 @@
                 hit.addEventListener("keydown", event => {
                     if (event.key === "Enter" || event.key === " ") selectLine(event);
                 });
-                hit.addEventListener("pointerenter", () => line.classList.add("is-hovered"));
-                hit.addEventListener("pointerleave", () => line.classList.remove("is-hovered"));
-                hit.addEventListener("focus", () => line.classList.add("is-hovered"));
-                hit.addEventListener("blur", () => line.classList.remove("is-hovered"));
+                const setLineHover = isHovered => {
+                    line.classList.toggle("is-hovered", isHovered);
+                    outline.classList.toggle("is-hovered", isHovered);
+                };
+                hit.addEventListener("pointerenter", () => setLineHover(true));
+                hit.addEventListener("pointerleave", () => setLineHover(false));
+                hit.addEventListener("focus", () => setLineHover(true));
+                hit.addEventListener("blur", () => setLineHover(false));
                 svg.appendChild(hit);
             });
             rowsWrapper.appendChild(svg);
