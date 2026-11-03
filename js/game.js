@@ -1415,7 +1415,7 @@
                 const isWideScreen = window.matchMedia('(min-width: 768px)').matches;
                 // 실제 상자 래퍼 폭(8rem)에 맞춰 트랙을 줄여 화면에서 상자 사이 간격을 축소합니다.
                 // 벌집형은 상자당 2트랙이므로 4rem, 일반형은 8.5rem으로 설정합니다.
-                const boardColumns = layout.honeycomb ? layout.cols * 2 : 9;
+                const boardColumns = 10;
                 rowContainer.style.setProperty('--board-columns', String(boardColumns));
                 rowContainer.style.gridTemplateColumns = `repeat(${boardColumns}, minmax(0, 1fr))`;
                 rowContainer.style.columnGap = '0px';
