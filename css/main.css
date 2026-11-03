@@ -107,9 +107,9 @@ body { font-family: 'Pretendard', 'Inter', sans-serif; background-color: #f8fafc
         .v2-board-item { padding:4px; }
         .v2-speech-card { background:#f0dfb9 !important; color:#30231f !important; border:3px solid #5c4032 !important; border-radius:2px !important; box-shadow:3px 4px 0 rgba(34,22,18,.55) !important; font-family:monospace; }
         .v2-speech-card::after { border-color:#f0dfb9 transparent transparent transparent !important; }
-        .v2-board-item:hover .v2-speech-card { border-color:#ffe18a !important; box-shadow:0 0 0 2px #ffe18a,3px 4px 0 rgba(34,22,18,.55) !important; }
+        .v2-board-item .v2-speech-card:hover { border-color:#ffe18a !important; box-shadow:0 0 0 2px #ffe18a,3px 4px 0 rgba(34,22,18,.55) !important; }
         .v2-chest-sprite { border-radius:2px !important; background:#50352b !important; image-rendering:pixelated; }
-        .v2-board-item:hover .v2-chest-sprite { outline:3px solid #ffe18a; outline-offset:3px; filter:brightness(1.2); transform:translateY(-3px); }
+        .v2-board-item .v2-chest-sprite:hover { outline:3px solid #ffe18a; outline-offset:3px; transform:translateY(-3px); }
         #right-control-panel { grid-column:1 / -1 !important; grid-row:2 !important; display:grid !important; grid-template-columns:minmax(180px,1fr) minmax(180px,1fr) minmax(240px,2fr) !important; gap:12px !important; background:#302326 !important; border:3px solid #80503d !important; border-radius:2px !important; color:#f4e5c7 !important; padding:12px !important; }
         #right-control-panel h3, #right-control-panel b { color:#f6d99f !important; }
         #right-control-panel .bg-slate-50 { background:#49302e !important; border-color:#80503d !important; }
@@ -827,28 +827,28 @@ header p { display:none !important; }
   .v2-board-item .v2-speech-card.v2-link-source-selected { transition:none; }
 }
 
-/* v0.07 refinement — periodic light pulse instead of static arrowheads.
-   A short bright segment traverses the path in ~0.7s, then rests for ~1.6s. */
+/* v0.07b — compact directional pulse: 0.3s travel, 2.35s repeat period. */
 .v2-statement-link-pulse {
   pointer-events: none !important;
   stroke: #fffdf4;
-  stroke-dasharray: 9 120;
-  stroke-dashoffset: 9;
+  stroke-width: 2.5;
+  stroke-dasharray: 5 120;
+  stroke-dashoffset: 5;
   opacity: 0;
-  filter: drop-shadow(0 0 2px rgba(21, 15, 19, .95))
-          drop-shadow(0 0 3px rgba(255, 255, 240, .85));
+  filter: drop-shadow(0 0 1px rgba(21, 15, 19, .95))
+          drop-shadow(0 0 2px rgba(255, 255, 240, .8));
   animation: v2-line-pulse-flow 2.35s linear infinite;
 }
 .v2-statement-link-pulse.is-selected {
-  stroke-width: 5;
-  filter: drop-shadow(0 0 2px #171219)
-          drop-shadow(0 0 5px rgba(255, 255, 255, .98));
+  stroke-width: 3.2;
+  filter: drop-shadow(0 0 1px #171219)
+          drop-shadow(0 0 3px rgba(255, 255, 255, .92));
 }
 @keyframes v2-line-pulse-flow {
-  0% { stroke-dashoffset: 9; opacity: 0; }
-  3% { opacity: 1; }
-  29% { stroke-dashoffset: -100; opacity: 1; }
-  31%, 100% { stroke-dashoffset: -100; opacity: 0; }
+  0% { stroke-dashoffset: 5; opacity: 0; }
+  1% { opacity: 1; }
+  12.77% { stroke-dashoffset: -100; opacity: 1; }
+  13.3%, 100% { stroke-dashoffset: -100; opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .v2-statement-link-pulse { animation: none !important; opacity: 0 !important; }
@@ -871,4 +871,53 @@ header p { display:none !important; }
   letter-spacing: .07em;
   white-space: nowrap;
   text-transform: none;
+}
+
+/* v0.07b — true element-local breathing glow, not a whole-tile hover.
+   Animate filter rather than box-shadow to avoid old !important theme overrides. */
+#chests-container .v2-board-item .v2-speech-card:hover,
+#chests-container .v2-board-item .v2-speech-card:focus-visible {
+  animation: v2-speech-glow-breathe 2.4s ease-in-out infinite;
+  border-color: #ffe18a !important;
+}
+#chests-container .v2-board-item .v2-chest-sprite:hover,
+#chests-container .v2-board-item .v2-chest-sprite:focus-visible {
+  animation: v2-chest-glow-breathe 2.4s ease-in-out infinite;
+  outline: 2px solid #ffe18a;
+  outline-offset: 3px;
+}
+@keyframes v2-speech-glow-breathe {
+  0%, 100% { filter: brightness(1.02) drop-shadow(0 0 2px rgba(255,222,143,.28)); }
+  50% { filter: brightness(1.12) drop-shadow(0 0 10px rgba(255,224,148,.88)); }
+}
+@keyframes v2-chest-glow-breathe {
+  0%, 100% { filter: brightness(1.04) drop-shadow(0 0 2px rgba(255,214,128,.30)); }
+  50% { filter: brightness(1.22) drop-shadow(0 0 11px rgba(255,214,128,.88)); }
+}
+
+/* Keep a thin dark edge even when a line thickens with the existing hover breath. */
+.v2-statement-link-outline {
+  pointer-events: none !important;
+  stroke: #0b0a0e;
+  stroke-width: 5;
+  opacity: .98;
+}
+.v2-statement-link-outline.is-selected { stroke-width: 7.5; }
+.v2-statement-link-outline.is-hovered:not(.is-selected) {
+  animation: v2-line-outline-breathe 2.5s ease-in-out infinite;
+}
+@keyframes v2-line-outline-breathe {
+  0%, 100% { stroke-width: 5; }
+  50% { stroke-width: 7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #chests-container .v2-board-item .v2-speech-card:hover,
+  #chests-container .v2-board-item .v2-speech-card:focus-visible,
+  #chests-container .v2-board-item .v2-chest-sprite:hover,
+  #chests-container .v2-board-item .v2-chest-sprite:focus-visible,
+  .v2-statement-link-outline.is-hovered:not(.is-selected) { animation: none !important; }
+  #chests-container .v2-board-item .v2-speech-card:hover,
+  #chests-container .v2-board-item .v2-speech-card:focus-visible { filter: brightness(1.1) drop-shadow(0 0 5px rgba(255,224,148,.7)); }
+  #chests-container .v2-board-item .v2-chest-sprite:hover,
+  #chests-container .v2-board-item .v2-chest-sprite:focus-visible { filter: brightness(1.15) drop-shadow(0 0 5px rgba(255,214,128,.7)); }
 }
