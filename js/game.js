@@ -23,6 +23,7 @@
                 return [from, to, color];
             }).filter(Boolean);
             selectedLinkColor = Object.hasOwn(LINK_COLORS, data.selectedLinkColor) ? data.selectedLinkColor : "gold";
+            linkRecolorPending = false;
             refreshLinkColorPicker();
             selectedStatementIdx = null;
             currentFloor = Math.max(1, Number(data.currentFloor) || 1);
@@ -168,18 +169,29 @@
         let statementLinks = [];
         let selectedStatementIdx = null;
         let selectedLinkColor = "gold";
+        // 색상 선택 직후의 다음 선 클릭 한 번만 색상 변경으로 처리합니다.
+        // 기본적으로 선을 클릭하면 해당 연결 하나를 삭제합니다.
+        let linkRecolorPending = false;
         function refreshLinkColorPicker() {
             document.querySelectorAll("#link-color-picker [data-link-color]").forEach(button => {
                 const active = button.dataset.linkColor === selectedLinkColor;
                 button.classList.toggle("is-active", active);
+                button.classList.toggle("is-recolor-pending", active && linkRecolorPending);
                 button.setAttribute("aria-pressed", String(active));
             });
+            const hint = document.getElementById("link-color-mode-hint");
+            if (hint) hint.textContent = linkRecolorPending
+                ? "색상 변경 대기 — 선을 클릭하세요 (Esc 취소)"
+                : "선 클릭: 삭제 · 색상 선택 후 선 클릭: 색 변경";
         }
         document.querySelectorAll("#link-color-picker [data-link-color]").forEach(button => {
             button.addEventListener("click", () => {
                 const color = button.dataset.linkColor;
                 if (!Object.hasOwn(LINK_COLORS, color)) return;
+                // 같은 색상 버튼을 한 번 더 누르면 색상 변경 모드를 취소합니다.
+                const cancelRecolor = linkRecolorPending && selectedLinkColor === color;
                 selectedLinkColor = color;
+                linkRecolorPending = !cancelRecolor;
                 refreshLinkColorPicker();
                 if (window.autoSaveToCloud) window.autoSaveToCloud();
             });
@@ -1484,7 +1496,20 @@
                     bubble.dataset.statementIndex = String(idx);
                     bubble.classList.toggle("v2-link-source-selected", !isPreview && selectedStatementIdx === idx);
                     if (!isPreview) {
-                        bubble.title = "클릭하여 발언을 선택한 뒤 연결할 상자를 클릭하세요.";
+                        bubble.title = "좌클릭: 발언 선택 · 우클릭: 이 발언에서 나온 연결선 전체 해제";
+                        bubble.addEventListener("contextmenu", event => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            const before = statementLinks.length;
+                            statementLinks = statementLinks.filter(link => link[0] !== idx);
+                            if (selectedStatementIdx === idx) selectedStatementIdx = null;
+                            if (statementLinks.length !== before) {
+                                statusMsg.innerText = `${getCoord(idx, layout).name} 발언의 연결선 ${before - statementLinks.length}개를 삭제했습니다.`;
+                                statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
+                                if (window.autoSaveToCloud) window.autoSaveToCloud();
+                            }
+                            renderChests();
+                        });
                         bubble.addEventListener("click", event => {
                             event.stopPropagation();
                             if (isGameOver) return;
@@ -1579,7 +1604,8 @@
             svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
             svg.setAttribute("width", String(width));
             svg.setAttribute("height", String(height));
-            svg.setAttribute("aria-hidden", "true");
+            svg.setAttribute("role", "group");
+            svg.setAttribute("aria-label", "발언과 상자의 연결선");
             svg.classList.add("v2-statement-links-layer");
             statementLinks.forEach(([from, to, color = "gold"]) => {
                 const source = rowsWrapper.querySelector(`.v2-speech-card[data-statement-index="${from}"]`);
@@ -1592,15 +1618,54 @@
                 const x2 = b.left + b.width / 2 - wrapperRect.left;
                 const y2 = b.top - wrapperRect.top;
                 const bend = Math.max(24, Math.abs(y2 - y1) * 0.45);
+                const d = `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`;
                 const path = document.createElementNS(svgNS, "path");
-                path.setAttribute("d", `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`);
+                path.setAttribute("d", d);
                 path.setAttribute("fill", "none");
                 path.setAttribute("stroke", LINK_COLORS[color] || LINK_COLORS.gold);
                 path.setAttribute("stroke-width", "3");
                 path.setAttribute("stroke-linecap", "round");
                 path.setAttribute("stroke-dasharray", "7 5");
                 path.setAttribute("filter", "drop-shadow(1px 2px 1px rgba(20,12,8,.8))");
+                path.classList.add("v2-statement-link-visible");
                 svg.appendChild(path);
+
+                // 가는 선도 쉽게 선택할 수 있도록 보이지 않는 넓은 클릭 영역을 사용합니다.
+                const hit = document.createElementNS(svgNS, "path");
+                hit.setAttribute("d", d);
+                hit.setAttribute("fill", "none");
+                hit.setAttribute("stroke", "transparent");
+                hit.setAttribute("stroke-width", "16");
+                hit.setAttribute("stroke-linecap", "round");
+                hit.setAttribute("tabindex", "0");
+                hit.setAttribute("role", "button");
+                hit.setAttribute("aria-label", `발언 ${from + 1}에서 상자 ${to + 1}까지 연결: 클릭하면 삭제, 색상 선택 후 클릭하면 색상 변경`);
+                hit.classList.add("v2-statement-link-hit");
+                const handleLineAction = event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const index = statementLinks.findIndex(link => link[0] === from && link[1] === to);
+                    if (index < 0) return;
+                    if (linkRecolorPending) {
+                        statementLinks[index][2] = selectedLinkColor;
+                        linkRecolorPending = false;
+                        refreshLinkColorPicker();
+                        statusMsg.innerText = "연결선 색상을 변경했습니다.";
+                    } else {
+                        statementLinks.splice(index, 1);
+                        statusMsg.innerText = "선택한 연결선 하나를 삭제했습니다.";
+                    }
+                    statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
+                    renderChests();
+                    if (window.autoSaveToCloud) window.autoSaveToCloud();
+                };
+                hit.addEventListener("click", handleLineAction);
+                hit.addEventListener("keydown", event => {
+                    if (event.key === "Enter" || event.key === " ") handleLineAction(event);
+                });
+                hit.addEventListener("focus", () => path.setAttribute("stroke-width", "5"));
+                hit.addEventListener("blur", () => path.setAttribute("stroke-width", "3"));
+                svg.appendChild(hit);
             });
             rowsWrapper.appendChild(svg);
         }
@@ -1812,9 +1877,17 @@
             for (let idx of oChests) { if (isGameOver) break; openChest(idx); }
         });
         btnClearMarks.addEventListener('click', () => {
-            if (isGameOver) return;
-            chestsData.forEach(c => { c.mark = null; c.memo = []; }); renderChests();
-            statusMsg.innerText = "모든 마킹과 메모를 초기화했습니다.";
+            // X 초기화: O/X/? 표시, 숫자 메모, 모든 연결선을 함께 지웁니다.
+            // 게임 종료 후에도 추리용 표시만 지울 수 있습니다.
+            chestsData.forEach(c => { c.mark = null; c.memo = []; });
+            statementLinks = [];
+            selectedStatementIdx = null;
+            linkRecolorPending = false;
+            refreshLinkColorPicker();
+            renderChests();
+            if (!isGameOver) {
+                statusMsg.innerText = "모든 마킹, 메모, 연결선을 초기화했습니다.";
+            }
             if(window.autoSaveToCloud) window.autoSaveToCloud();
         });
 
@@ -1823,7 +1896,13 @@
         window.addEventListener('keydown', (e) => {
             if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
             const pressedKey = e.key.toLowerCase();
-            
+
+            if (pressedKey === 'escape' && linkRecolorPending) {
+                linkRecolorPending = false;
+                refreshLinkColorPicker();
+                return;
+            }
+
             if (pressedKey === 'r') {
                 e.preventDefault(); e.stopPropagation();
                 if (isGameOver) {
