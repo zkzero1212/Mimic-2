@@ -947,3 +947,14 @@ header p { display:none !important; }
   scrollbar-width: thin;
   scrollbar-color: #bc8a61 #35242a;
 }
+
+/* v0.07f — contextual keyboard hint for right-click chest annotation. */
+.v2-statement-context-palette .v2-context-keyhint {
+  margin: 9px 0 0;
+  padding-top: 7px;
+  border-top: 1px solid rgba(199, 147, 100, .38);
+  color: #dfc09b;
+  text-align: center;
+  font: 10px/1.5 'Pretendard', monospace;
+  letter-spacing: .02em;
+}
