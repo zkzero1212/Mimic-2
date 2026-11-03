@@ -26,6 +26,7 @@
             linkRecolorPending = false;
             refreshLinkColorPicker();
             selectedStatementIdx = null;
+            markToolbarActiveIdx = null;
             currentFloor = Math.max(1, Number(data.currentFloor) || 1);
             maxFloor = Math.max(1, Number(data.maxFloor) || 1);
             permCurses = data.permCurses || { random: false, sleepLevel: 0, addChests: 0, addMimics: 0 };
@@ -160,6 +161,7 @@
         let totalOpened = 0;
         let totalTrueChests = 0;
         let hoveredChestIdx = null;
+        let markToolbarActiveIdx = null;
         const LINK_COLORS = Object.freeze({
             gold: "#ffe18a",
             mint: "#5eead4",
@@ -229,6 +231,39 @@
         const btnRestart = document.getElementById('btn-restart');
         const btnOpenO = document.getElementById('btn-open-o');
         const btnClearMarks = document.getElementById('btn-clear-marks');
+
+        // --- v0.06 Mark and Memo Toolbar ---
+        function updateMarkToolbar() {
+            const panel = document.getElementById("mark-tools");
+            if (!panel) return;
+            const target = markToolbarActiveIdx === null ? null : chestsData[markToolbarActiveIdx];
+            const usable = !!target && !target.isOpen && !isGameOver;
+            const label = document.getElementById("mark-target-label");
+            if (label) label.textContent = usable
+                ? `선택: ${getCoord(markToolbarActiveIdx, currentGridLayout).name}`
+                : "상자 아래 표시를 선택하세요";
+            panel.querySelectorAll("[data-mark-value]").forEach(button => {
+                button.disabled = !usable;
+                button.setAttribute("aria-pressed", String(usable && target.mark === button.dataset.markValue));
+            });
+            panel.querySelectorAll("[data-memo-value]").forEach(button => {
+                button.disabled = !usable;
+                button.setAttribute("aria-pressed", String(usable && Array.isArray(target.memo)
+                    && target.memo.includes(Number(button.dataset.memoValue))));
+            });
+        }
+        document.querySelectorAll("#mark-tools [data-mark-value]").forEach(button => {
+            button.addEventListener("click", () => {
+                if (markToolbarActiveIdx === null) return;
+                toggleMark(markToolbarActiveIdx, button.dataset.markValue);
+            });
+        });
+        document.querySelectorAll("#mark-tools [data-memo-value]").forEach(button => {
+            button.addEventListener("click", () => {
+                if (markToolbarActiveIdx === null) return;
+                toggleMemo(markToolbarActiveIdx, Number(button.dataset.memoValue));
+            });
+        });
 
         // --- Utils ---
         function shuffleArray(array) {
@@ -419,6 +454,7 @@
             isFloorCleared = false;
             statementLinks = [];
             selectedStatementIdx = null;
+            markToolbarActiveIdx = null;
             currentTempCurses = {};
             currentEventLogs = [];
             isLuckEvent = false;
@@ -1554,17 +1590,25 @@
                     };
                     chestWrap.appendChild(btnChest);
 
-                    const actionWrap = document.createElement('div'); actionWrap.className = "mt-1 w-full h-[18px] flex items-center justify-center";
+                    const actionWrap = document.createElement('div');
+                    actionWrap.className = "mt-1 w-full h-[18px] flex items-center justify-center";
                     if (chest.isOpen) {
-                        // 개봉 후에는 기존처럼 실제 결과를 표시합니다.
                         const resultBadge = document.createElement('div');
                         resultBadge.className = `w-full min-h-[18px] px-1 py-0.5 rounded-lg bg-white shadow-xs text-[9px] leading-tight font-bold text-center flex items-center justify-center break-keep ${displayAsMimic ? 'text-red-600' : (chest.isTrickster || chest.treasure === '흉내쟁이' ? 'text-violet-700' : (treasureColorMap[chest.treasure] || { text: 'text-emerald-700' }).text)}`;
                         resultBadge.innerText = displayAsMimic ? (chest.isTricksterMimickingMimic ? '흉내쟁이(미믹)!' : '미믹!') : chest.treasure;
                         actionWrap.appendChild(resultBadge);
                     } else {
-                        // 개봉 전에는 상자 아래 고정된 빈 네모 안에 마킹과 메모를 표시합니다.
-                        const markBadge = document.createElement('div');
-                        markBadge.className = "w-[18px] h-[18px] rounded-sm border-2 border-slate-300 bg-white shadow-sm flex items-center justify-center gap-0.5 text-[9px] font-extrabold";
+                        // 마킹과 숫자 메모를 별도로 표시하므로 둘 다 동시에 확인할 수 있습니다.
+                        const editButton = document.createElement('button');
+                        editButton.type = "button";
+                        editButton.className = "v2-chest-mark-select";
+                        if (!isPreview && markToolbarActiveIdx === idx) {
+                            editButton.classList.add("is-selected");
+                        }
+                        editButton.title = "클릭해서 이 상자의 마킹·메모를 수정하세요.";
+                        editButton.setAttribute("aria-label", `${coord.name} 상자 마킹·메모 편집`);
+                        const markBadge = document.createElement('span');
+                        markBadge.className = "w-[18px] h-[18px] shrink-0 rounded-sm border-2 border-slate-300 bg-white shadow-sm flex items-center justify-center text-[9px] font-extrabold";
                         const markStyles = {
                             O: "text-emerald-600 border-emerald-400",
                             X: "text-red-600 border-red-400",
@@ -1572,14 +1616,29 @@
                         };
                         if (chest.mark) {
                             markBadge.className += " " + markStyles[chest.mark];
-                            markBadge.innerText = chest.mark;
-                        } else if (chest.memo && chest.memo.length) {
-                            markBadge.className += " text-slate-600 border-slate-400";
-                            markBadge.innerText = [...chest.memo].sort((a,b) => a-b).join("");
+                            markBadge.textContent = chest.mark;
                         } else {
-                            markBadge.innerHTML = "&nbsp;";
+                            markBadge.textContent = " ";
                         }
-                        actionWrap.appendChild(markBadge);
+                        editButton.appendChild(markBadge);
+                        if (Array.isArray(chest.memo) && chest.memo.length) {
+                            const memoList = document.createElement("span");
+                            memoList.className = "v2-mark-memo-readout";
+                            [...chest.memo].sort((a,b) => a-b).forEach(num => {
+                                const digit = document.createElement("span");
+                                digit.textContent = String(num);
+                                memoList.appendChild(digit);
+                            });
+                            editButton.appendChild(memoList);
+                        }
+                        if (!isPreview) editButton.addEventListener("click", event => {
+                            event.stopPropagation();
+                            if (isGameOver) return;
+                            markToolbarActiveIdx = markToolbarActiveIdx === idx ? null : idx;
+                            renderChests();
+                        });
+                        else editButton.disabled = true;
+                        actionWrap.appendChild(editButton);
                     }
                     chestWrap.appendChild(actionWrap); chestWrap.style.gridColumnStart = String(layout.honeycomb ? layout.pos[idx][1] * 2 + 1 : layout.pos[idx][1] + 1);
                     chestWrap.style.gridColumnEnd = layout.honeycomb ? 'span 2' : 'span 1';
@@ -1588,6 +1647,7 @@
                 rowsWrapper.appendChild(rowContainer);
             }
             if (!isPreview && statementLinks.length) drawStatementLinks(rowsWrapper);
+            if (!isPreview) updateMarkToolbar();
         }
 
         function drawStatementLinks(rowsWrapper) {
@@ -1940,6 +2000,7 @@
             chestsData.forEach(c => { c.mark = null; c.memo = []; });
             statementLinks = [];
             selectedStatementIdx = null;
+            markToolbarActiveIdx = null;
             linkRecolorPending = false;
             refreshLinkColorPicker();
             renderChests();
