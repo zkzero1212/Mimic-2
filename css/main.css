@@ -423,3 +423,243 @@ header p { display:none !important; }
   background:#44332d; border:1px solid #c28c60;
   padding:0 2px; border-radius:2px;
 }
+
+
+/* v0.07 — In-game floating fantasy tool palette.
+   Keep v0.04/v0.05 #chests-container grid sizing and centering unchanged. */
+.v2-board-stage {
+  position: relative;
+  width: min(100%, 900px);
+  margin: 0 auto;
+  align-self: center;
+  min-width: 0;
+  isolation: isolate;
+}
+.v2-board-stage #chests-container {
+  margin: 0 auto !important;
+}
+/* Distinct decorative HUD; completely separate from the chest renderer. */
+#game-tool-palette.v2-game-tool-palette {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(12px, 2.6%, 25px);
+  transform: translateX(-50%);
+  width: min(810px, calc(100% - 22px));
+  z-index: 45;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(176px, 1fr) minmax(0, 2.05fr);
+  align-items: center;
+  gap: 5px 0;
+  padding: 20px 14px 8px;
+  border: 4px solid #d6a061;
+  border-radius: 7px;
+  color: #ffe5bb;
+  font: 700 12px/1.25 'Pretendard', monospace;
+  background:
+    linear-gradient(90deg, rgba(220,153,77,.28) 0 3px, transparent 3px calc(100% - 3px), rgba(220,153,77,.28) calc(100% - 3px)),
+    repeating-linear-gradient(0deg, rgba(255,227,170,.035) 0 2px, transparent 2px 7px),
+    linear-gradient(180deg, #6e3e38 0%, #41292c 14%, #382127 75%, #281d24 100%);
+  box-shadow:
+    inset 0 0 0 2px #2c171d,
+    inset 0 0 0 5px #8d553d,
+    inset 0 8px 0 rgba(255,219,148,.09),
+    0 6px 0 #1d171b,
+    0 12px 22px rgba(15,9,16,.55);
+}
+#game-tool-palette::before,
+#game-tool-palette::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 10px;
+  pointer-events: none;
+  background: linear-gradient(90deg, #6f3f2d, #f0c079 46%, #a5693c 70%, #41231f);
+  border: 2px solid #271b1d;
+  box-shadow: inset 0 0 0 1px #e8b577, 0 2px 3px #201819;
+}
+#game-tool-palette::before { left: 5px; }
+#game-tool-palette::after { right: 5px; }
+.v2-palette-crest {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  transform: translateX(-50%) rotate(45deg);
+  border: 3px solid #e6b365;
+  border-radius: 3px;
+  background: radial-gradient(circle at 25% 25%, #e6c5ff, #9d4fd0 35%, #512472 75%);
+  box-shadow: inset 0 0 0 2px #3a1a49, 2px 3px 0 #24131c;
+  pointer-events: none;
+}
+#game-tool-palette #link-color-picker.v2-link-color-picker,
+#game-tool-palette #mark-tools.v2-mark-tools {
+  margin: 0 !important;
+  padding: 0 8px !important;
+  width: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  min-width: 0;
+}
+#game-tool-palette #link-color-picker.v2-link-color-picker {
+  display: flex !important;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-right: 2px solid #9c623e !important;
+}
+#game-tool-palette #mark-tools.v2-mark-tools {
+  display: grid !important;
+  grid-template-columns: minmax(105px, .8fr) minmax(170px, 1.3fr);
+  align-items: stretch;
+  gap: 0;
+}
+#game-tool-palette .v2-palette-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  text-align: center;
+}
+#game-tool-palette #mark-tools .v2-palette-section:first-child {
+  border-right: 2px solid #9c623e;
+}
+#game-tool-palette .v2-palette-heading {
+  display: inline-block;
+  flex: none;
+  min-width: 68px;
+  padding: 3px 12px;
+  border: 2px solid #a66d46;
+  border-radius: 3px;
+  background: linear-gradient(#724538, #42282a);
+  box-shadow: inset 0 1px 0 #cd9360, 0 2px 0 #1d151a;
+  color: #ffe9bb;
+  font: 800 12px/1.1 'Pretendard', monospace;
+  letter-spacing: .05em;
+  text-shadow: 1px 1px #21181b;
+}
+#game-tool-palette .v2-palette-buttons {
+  display: flex !important;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+}
+#game-tool-palette .v2-link-color-option,
+#game-tool-palette .v2-mark-tool-group button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  background: linear-gradient(135deg, #6d4b43, #39252c);
+  border: 2px solid #a56d4d;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px #c99869, inset -1px -1px #291b20, 1px 2px 0 #25181d;
+  font: 900 16px/1 monospace;
+  color: #ffead0;
+  text-shadow: 1px 1px #231a20;
+  cursor: pointer;
+}
+#game-tool-palette .v2-link-color-dot {
+  width: 22px;
+  height: 22px;
+  display: block;
+  background: var(--link-swatch);
+  border: 2px solid #4a2d30;
+  border-radius: 2px;
+  box-shadow: inset 2px 2px rgba(255,255,255,.24), inset -2px -2px rgba(22,12,15,.22);
+}
+#game-tool-palette .v2-link-color-option:hover,
+#game-tool-palette .v2-mark-tool-group button:hover:not(:disabled) {
+  border-color: #f8d68a;
+  filter: brightness(1.15);
+}
+#game-tool-palette .v2-link-color-option.is-active,
+#game-tool-palette .v2-mark-tool-group button[aria-pressed="true"] {
+  border-color: #ffe18a;
+  background: #563735;
+  box-shadow: 0 0 0 2px #d6a45c, inset 0 0 0 1px #ffe9be, 0 2px 0 #22151c;
+}
+#game-tool-palette .v2-link-color-option.is-recolor-pending {
+  outline: 2px dashed #fff0c4;
+  outline-offset: 3px;
+}
+#game-tool-palette .v2-mark-tool-group button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+#game-tool-palette button:focus-visible {
+  outline: 2px solid #fff0c4;
+  outline-offset: 3px;
+}
+#game-tool-palette .v2-palette-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  padding-top: 4px;
+  border-top: 1px solid #8a533c;
+  min-width: 0;
+  color: #e6c69d;
+}
+#game-tool-palette .v2-link-color-hint,
+#game-tool-palette .v2-mark-target-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: #e6c69d;
+  font: 10px/1.35 'Pretendard', monospace;
+  white-space: normal;
+  text-align: center;
+}
+#game-tool-palette .v2-mark-target-label { color: #f8dfac; }
+@media (max-width: 1150px) {
+  /* When the playfield is narrow, dock immediately below it to avoid hiding chests. */
+  .v2-board-stage { display:flex; flex-direction:column; align-items:center; }
+  #game-tool-palette.v2-game-tool-palette {
+    position:relative; left:auto; bottom:auto; transform:none;
+    width:min(100%, 810px); margin:12px auto 10px;
+  }
+}
+@media (max-width: 690px) {
+  #game-tool-palette.v2-game-tool-palette {
+    grid-template-columns: 1fr;
+    padding: 20px 10px 10px;
+    gap: 10px;
+  }
+  #game-tool-palette #link-color-picker.v2-link-color-picker {
+    border-right:0 !important;
+    border-bottom:2px solid #9c623e !important;
+    padding-bottom:10px !important;
+  }
+  #game-tool-palette #mark-tools.v2-mark-tools {
+    grid-template-columns:minmax(115px,1fr) minmax(180px,1.5fr);
+    padding:0 !important;
+  }
+  #game-tool-palette .v2-palette-feedback { padding-top:8px; }
+}
+@media (max-width: 390px) {
+  #game-tool-palette .v2-palette-buttons { gap:3px; }
+  #game-tool-palette .v2-mark-tool-group button,
+  #game-tool-palette .v2-link-color-option { width:29px; min-width:29px; height:30px; }
+  #game-tool-palette #mark-tools.v2-mark-tools { grid-template-columns: 1fr; gap: 8px; }
+  #game-tool-palette #mark-tools .v2-palette-section:first-child {
+    border-right:0; padding-bottom:8px; border-bottom:1px solid #9c623e;
+  }
+}
