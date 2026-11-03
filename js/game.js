@@ -2370,11 +2370,45 @@
 
         // v0.07i: Visible victory/defeat controls, without changing any floor logic.
         const resultOverlay = document.getElementById("floor-result-overlay");
+        const FLOOR_RESULT_ANIM_MS = 320;
+        let floorResultDismissTimer = null;
         function closeFloorResult() {
-            if (resultOverlay) resultOverlay.hidden = true;
+            if (floorResultDismissTimer !== null) {
+                clearTimeout(floorResultDismissTimer);
+                floorResultDismissTimer = null;
+            }
+            if (!resultOverlay) return;
+            resultOverlay.classList.remove("is-closing");
+            resultOverlay.hidden = true;
+        }
+        function dismissFloorResult(afterDismiss = null) {
+            if (!resultOverlay || resultOverlay.hidden) {
+                if (afterDismiss) afterDismiss();
+                return;
+            }
+            if (resultOverlay.classList.contains("is-closing")) return;
+            // Mirror the entrance: fade and slide away before switching floors.
+            resultOverlay.classList.add("is-closing");
+            const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            floorResultDismissTimer = window.setTimeout(() => {
+                floorResultDismissTimer = null;
+                closeFloorResult();
+                if (afterDismiss) afterDismiss();
+            }, reduceMotion ? 0 : FLOOR_RESULT_ANIM_MS);
+        }
+        function advanceAfterFloorResult() {
+            dismissFloorResult(() => {
+                if (isFloorCleared) btnNextFloor.click();
+                else btnRestart.click();
+            });
         }
         function showFloorResult(isWin) {
             if (!resultOverlay) return;
+            if (floorResultDismissTimer !== null) {
+                clearTimeout(floorResultDismissTimer);
+                floorResultDismissTimer = null;
+            }
+            resultOverlay.classList.remove("is-closing");
             resultOverlay.querySelector(".v2-floor-result-card").dataset.result = isWin ? "clear" : "mimic";
             document.getElementById("floor-result-eyebrow").textContent =
                 isWin ? "FLOOR CLEARED" : "EXPEDITION FAILED";
@@ -2387,12 +2421,8 @@
             resultOverlay.hidden = false;
             document.getElementById("floor-result-primary").focus({preventScroll:true});
         }
-        document.getElementById("floor-result-primary").addEventListener("click", () => {
-            closeFloorResult();
-            if (isFloorCleared) btnNextFloor.click();
-            else btnRestart.click();
-        });
-        document.getElementById("floor-result-review").addEventListener("click", closeFloorResult);
+        document.getElementById("floor-result-primary").addEventListener("click", advanceAfterFloorResult);
+        document.getElementById("floor-result-review").addEventListener("click", () => dismissFloorResult());
 
         function gameOver(isWin) {
             isGameOver = true;
@@ -2475,9 +2505,12 @@
             if (resultOverlay && !resultOverlay.hidden) {
                 if (pressedKey === 'escape') {
                     e.preventDefault();
-                    closeFloorResult();
+                    dismissFloorResult();
+                } else if (pressedKey === 'r' && !e.repeat && isGameOver) {
+                    e.preventDefault();
+                    advanceAfterFloorResult();
                 }
-                return; // No gameplay hotkeys while result controls are open.
+                return; // Other gameplay keys remain blocked while the result card is shown.
             }
 
             if (pressedKey === 'escape' && contextPalette && !contextPalette.hidden) {
