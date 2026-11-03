@@ -1721,7 +1721,11 @@
                 const y1 = a.bottom - wrapper.top;
                 const x2 = b.left + b.width / 2 - wrapper.left;
                 const y2 = b.top - wrapper.top;
-                const bend = Math.max(24, Math.abs(y2 - y1) * .45);
+                // 대상이 위쪽에 있으면 위로, 아래쪽이면 아래로 진입하도록
+                // 제어점을 전환해 화살표가 항상 실제 연결 방향을 가리키게 합니다.
+                const verticalDelta = y2 - y1;
+                const bend = Math.max(24, Math.abs(verticalDelta) * .45)
+                    * (verticalDelta < 0 ? -1 : 1);
                 const d = `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`;
                 const color = Object.hasOwn(LINK_COLORS, savedColor) ? savedColor : "gold";
                 const isSelected = selectedLineLink?.[0] === from && selectedLineLink?.[1] === to;
