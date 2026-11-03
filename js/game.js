@@ -26,6 +26,7 @@
             linkRecolorPending = false;
             refreshLinkColorPicker();
             selectedStatementIdx = null;
+            selectedLineLink = null;
             markToolbarActiveIdx = null;
             closeStatementContextPalette();
             currentFloor = Math.max(1, Number(data.currentFloor) || 1);
@@ -171,6 +172,7 @@
         });
         let statementLinks = [];
         let selectedStatementIdx = null;
+        let selectedLineLink = null; // [발언, 대상 상자] — 시각적 선택만 유지
         let selectedLinkColor = "gold";
         // 색상 선택 직후의 다음 선 클릭 한 번만 색상 변경으로 처리합니다.
         // 기본적으로 선을 클릭하면 해당 연결 하나를 삭제합니다.
@@ -281,6 +283,7 @@
             currentFloor = 1;
             statementLinks = [];
             selectedStatementIdx = null;
+            selectedLineLink = null;
             currentGridLayout = null;
             baseChests = 4;
             baseMimics = 2;
@@ -455,6 +458,7 @@
             isFloorCleared = false;
             statementLinks = [];
             selectedStatementIdx = null;
+            selectedLineLink = null;
             markToolbarActiveIdx = null;
             closeStatementContextPalette();
             currentTempCurses = {};
@@ -1532,9 +1536,10 @@
                     else bubble.innerHTML = `<span>${chest.statement}</span>`;
                     
                     bubble.dataset.statementIndex = String(idx);
-                    bubble.classList.toggle("v2-link-source-selected", !isPreview && selectedStatementIdx === idx);
+                    bubble.classList.toggle("v2-link-source-selected", !isPreview &&
+                        (selectedStatementIdx === idx || selectedLineLink?.[0] === idx));
                     if (!isPreview) {
-                        bubble.title = "좌클릭: 연결 선택 / 대상 선택 · 우클릭: 빠른 추리 팔레트";
+                        bubble.title = "좌클릭: 연결 출발·도착 선택 / 우클릭: 선 색상·지우개";
                         // 우클릭은 상위 게임판에서 처리합니다.
                         // SVG 연결선이 발언 위를 지나가도 원래 발언 카드를 찾기 위함입니다.
                         bubble.addEventListener("click", event => {
@@ -1547,6 +1552,7 @@
                                 return;
                             }
                             selectedStatementIdx = selectedStatementIdx === idx ? null : idx;
+                            selectedLineLink = null;
                             statusMsg.innerText = selectedStatementIdx === null
                                 ? "발언 선택을 해제했습니다."
                                 : `${getCoord(idx, layout).name} 발언 선택됨 — 연결할 상자 또는 발언문구를 클릭하세요.`;
@@ -1583,6 +1589,7 @@
                     if (isGameOver && chest.isOpen) btnChest.classList.add(displayAsMimic ? 'mimic-result-reveal' : 'treasure-result-reveal');
                     
                     btnChest.dataset.chestIndex = String(idx);
+                    if (!isPreview) btnChest.title = "좌클릭: 상자 열기 또는 선 연결 / 우클릭: 마킹·메모";
                     if (!isPreview) btnChest.onclick = () => {
                         if (selectedStatementIdx !== null) {
                             toggleStatementLink(selectedStatementIdx, idx);
@@ -1671,42 +1678,78 @@
         }
 
         function drawStatementLinks(rowsWrapper) {
-            const svgNS = "http://www.w3.org/2000/svg";
-            const wrapperRect = rowsWrapper.getBoundingClientRect();
+            const ns = "http://www.w3.org/2000/svg";
+            const wrapper = rowsWrapper.getBoundingClientRect();
             const width = Math.max(rowsWrapper.scrollWidth, rowsWrapper.offsetWidth);
             const height = Math.max(rowsWrapper.scrollHeight, rowsWrapper.offsetHeight);
-            const svg = document.createElementNS(svgNS, "svg");
+            const svg = document.createElementNS(ns, "svg");
             svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
             svg.setAttribute("width", String(width));
             svg.setAttribute("height", String(height));
             svg.setAttribute("role", "group");
-            svg.setAttribute("aria-label", "발언과 상자의 연결선");
+            svg.setAttribute("aria-label", "발언에서 상자 방향으로 화살표가 있는 연결선");
             svg.classList.add("v2-statement-links-layer");
-            statementLinks.forEach(([from, to, color = "gold"]) => {
+
+            // 화살표 꼭지점은 대상 상자를 향하며 출발점에는 작은 점을 표시합니다.
+            const defs = document.createElementNS(ns, "defs");
+            Object.entries(LINK_COLORS).forEach(([name, hex]) => {
+                const marker = document.createElementNS(ns, "marker");
+                marker.setAttribute("id", `v2-line-arrow-${name}`);
+                marker.setAttribute("markerWidth", "11");
+                marker.setAttribute("markerHeight", "11");
+                marker.setAttribute("refX", "9");
+                marker.setAttribute("refY", "5");
+                marker.setAttribute("orient", "auto");
+                marker.setAttribute("markerUnits", "userSpaceOnUse");
+                const arrow = document.createElementNS(ns, "path");
+                arrow.setAttribute("d", "M 1 1 L 9 5 L 1 9 Z");
+                arrow.setAttribute("fill", hex);
+                arrow.setAttribute("stroke", "#24191d");
+                arrow.setAttribute("stroke-width", ".8");
+                marker.appendChild(arrow);
+                defs.appendChild(marker);
+            });
+            svg.appendChild(defs);
+
+            statementLinks.forEach(([from, to, savedColor = "gold"]) => {
                 const source = rowsWrapper.querySelector(`.v2-speech-card[data-statement-index="${from}"]`);
                 const target = rowsWrapper.querySelector(`.v2-chest-sprite[data-chest-index="${to}"]`);
                 if (!source || !target) return;
                 const a = source.getBoundingClientRect();
                 const b = target.getBoundingClientRect();
-                const x1 = a.left + a.width / 2 - wrapperRect.left;
-                const y1 = a.bottom - wrapperRect.top;
-                const x2 = b.left + b.width / 2 - wrapperRect.left;
-                const y2 = b.top - wrapperRect.top;
-                const bend = Math.max(24, Math.abs(y2 - y1) * 0.45);
+                const x1 = a.left + a.width / 2 - wrapper.left;
+                const y1 = a.bottom - wrapper.top;
+                const x2 = b.left + b.width / 2 - wrapper.left;
+                const y2 = b.top - wrapper.top;
+                const bend = Math.max(24, Math.abs(y2 - y1) * .45);
                 const d = `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`;
-                const path = document.createElementNS(svgNS, "path");
-                path.setAttribute("d", d);
-                path.setAttribute("fill", "none");
-                path.setAttribute("stroke", LINK_COLORS[color] || LINK_COLORS.gold);
-                path.setAttribute("stroke-width", "3");
-                path.setAttribute("stroke-linecap", "round");
-                path.setAttribute("stroke-dasharray", "7 5");
-                path.setAttribute("filter", "drop-shadow(1px 2px 1px rgba(20,12,8,.8))");
-                path.classList.add("v2-statement-link-visible");
-                svg.appendChild(path);
+                const color = Object.hasOwn(LINK_COLORS, savedColor) ? savedColor : "gold";
+                const isSelected = selectedLineLink?.[0] === from && selectedLineLink?.[1] === to;
 
-                // 가는 선도 쉽게 선택할 수 있도록 보이지 않는 넓은 클릭 영역을 사용합니다.
-                const hit = document.createElementNS(svgNS, "path");
+                const origin = document.createElementNS(ns, "circle");
+                origin.setAttribute("cx", String(x1));
+                origin.setAttribute("cy", String(y1));
+                origin.setAttribute("r", isSelected ? "4.5" : "3.5");
+                origin.setAttribute("fill", LINK_COLORS[color]);
+                origin.setAttribute("stroke", "#24191d");
+                origin.setAttribute("stroke-width", "1.5");
+                origin.setAttribute("pointer-events", "none");
+                svg.appendChild(origin);
+
+                const line = document.createElementNS(ns, "path");
+                line.setAttribute("d", d);
+                line.setAttribute("fill", "none");
+                line.setAttribute("stroke", LINK_COLORS[color]);
+                line.setAttribute("stroke-width", isSelected ? "5.5" : "3");
+                line.setAttribute("stroke-linecap", "round");
+                line.setAttribute("marker-end", `url(#v2-line-arrow-${color})`);
+                line.style.color = LINK_COLORS[color];
+                line.classList.add("v2-statement-link-visible");
+                if (isSelected) line.classList.add("is-selected");
+                svg.appendChild(line);
+
+                // 16px의 투명 클릭 영역은 별개이므로 선 위에 올리기 편합니다.
+                const hit = document.createElementNS(ns, "path");
                 hit.setAttribute("d", d);
                 hit.setAttribute("fill", "none");
                 hit.setAttribute("stroke", "transparent");
@@ -1714,32 +1757,35 @@
                 hit.setAttribute("stroke-linecap", "round");
                 hit.setAttribute("tabindex", "0");
                 hit.setAttribute("role", "button");
-                hit.setAttribute("aria-label", `발언 ${from + 1}에서 상자 ${to + 1}까지 연결: 클릭하면 삭제, 색상 선택 후 클릭하면 색상 변경`);
+                hit.setAttribute("aria-label", `발언 ${from + 1}에서 상자 ${to + 1}로 향하는 선 선택`);
                 hit.classList.add("v2-statement-link-hit");
-                const handleLineAction = event => {
+
+                const selectLine = event => {
                     event.preventDefault();
                     event.stopPropagation();
                     const index = statementLinks.findIndex(link => link[0] === from && link[1] === to);
                     if (index < 0) return;
+                    let colorChanged = false;
                     if (linkRecolorPending) {
                         statementLinks[index][2] = selectedLinkColor;
                         linkRecolorPending = false;
                         refreshLinkColorPicker();
-                        statusMsg.innerText = "연결선 색상을 변경했습니다.";
-                    } else {
-                        statementLinks.splice(index, 1);
-                        statusMsg.innerText = "선택한 연결선 하나를 삭제했습니다.";
+                        colorChanged = true;
                     }
-                    statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
+                    const same = selectedLineLink?.[0] === from && selectedLineLink?.[1] === to;
+                    selectedLineLink = !colorChanged && same ? null : [from, to];
+                    selectedStatementIdx = null;
                     renderChests();
-                    if (window.autoSaveToCloud) window.autoSaveToCloud();
+                    if (colorChanged && window.autoSaveToCloud) window.autoSaveToCloud();
                 };
-                hit.addEventListener("click", handleLineAction);
+                hit.addEventListener("click", selectLine);
                 hit.addEventListener("keydown", event => {
-                    if (event.key === "Enter" || event.key === " ") handleLineAction(event);
+                    if (event.key === "Enter" || event.key === " ") selectLine(event);
                 });
-                hit.addEventListener("focus", () => path.setAttribute("stroke-width", "5"));
-                hit.addEventListener("blur", () => path.setAttribute("stroke-width", "3"));
+                hit.addEventListener("pointerenter", () => line.classList.add("is-hovered"));
+                hit.addEventListener("pointerleave", () => line.classList.remove("is-hovered"));
+                hit.addEventListener("focus", () => line.classList.add("is-hovered"));
+                hit.addEventListener("blur", () => line.classList.remove("is-hovered"));
                 svg.appendChild(hit);
             });
             rowsWrapper.appendChild(svg);
@@ -1829,8 +1875,10 @@
             statementLinks = statementLinks.filter(([from]) => from !== idx);
             const removed = previousCount - statementLinks.length;
             const hadSelection = selectedStatementIdx === idx;
+            const hadSelectedLine = selectedLineLink?.[0] === idx;
             if (hadSelection) selectedStatementIdx = null;
-            if (!removed && !hadSelection) return;
+            if (hadSelectedLine) selectedLineLink = null;
+            if (!removed && !hadSelection && !hadSelectedLine) return;
             if (removed > 0) {
                 statusMsg.innerText = `발언 ${idx + 1}의 연결선 ${removed}개를 삭제했습니다.`;
                 statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
@@ -1996,6 +2044,8 @@
                 message = "선택한 색상으로 발언과 상자를 연결했습니다.";
             }
             selectedStatementIdx = null;
+            selectedLineLink = existing >= 0 && message === "발언-상자 연결을 해제했습니다."
+                ? null : [from, to];
             statusMsg.innerText = message;
             statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
             renderChests();
@@ -2127,6 +2177,7 @@
             chestsData.forEach(c => { c.mark = null; c.memo = []; });
             statementLinks = [];
             selectedStatementIdx = null;
+            selectedLineLink = null;
             markToolbarActiveIdx = null;
             closeStatementContextPalette();
             linkRecolorPending = false;
