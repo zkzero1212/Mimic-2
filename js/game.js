@@ -1401,6 +1401,7 @@
             horizontalScroller.className = "w-full max-w-full overflow-x-auto overflow-y-visible pt-4 pb-2";
             const rowsWrapper = document.createElement('div');
             rowsWrapper.className = "flex flex-col gap-1 items-center w-max min-w-0 mx-auto";
+            rowsWrapper.style.position = "relative";
             horizontalScroller.appendChild(rowsWrapper);
             targetContainer.appendChild(horizontalScroller);
             const numChests = boardData.length;
