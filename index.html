@@ -17,7 +17,7 @@
         <!-- Header -->
         <header class="text-center mb-6">
             <h1 class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-1 drop-shadow-sm">
-                미믹 로직: 등반 모드 <span id="game-version" class="inline-block align-middle ml-1 text-xs md:text-sm font-bold text-slate-400 tracking-normal">v0.06</span>
+                미믹 로직: 등반 모드 <span id="game-version" class="inline-block align-middle ml-1 text-xs md:text-sm font-bold text-slate-400 tracking-normal">v0.07</span>
             </h1>
             <p class="text-slate-500 text-xs md:text-sm" aria-hidden="true"></p>
         </header>
@@ -86,44 +86,54 @@
                 <div id="ui-event-logs" class="flex flex-col gap-1 mt-1"></div>
             </div>
 
-            <!-- Center Chests Grid Area -->
+            <!-- Main board and pixel-fantasy floating palette (v0.07) -->
             <div class="lg:col-span-10 flex flex-col items-center min-w-0 w-full">
-                <!-- 가로형 구성품 리스트 -->
-                <div id="info-treasures-list" class="flex flex-wrap justify-center items-center gap-2 md:gap-4 mb-4 bg-white px-3 py-2.5 rounded-xl shadow-sm border border-slate-200 w-full min-h-[48px]">
-                </div>
-                
-                <!-- v0.05: 발언-상자 연결선 색상 팔레트 -->
-                <div id="link-color-picker" class="v2-link-color-picker" role="group" aria-label="연결선 색상 선택">
-                    <span class="v2-link-color-title">연결선 색상</span>
-                    <button type="button" class="v2-link-color-option is-active" data-link-color="gold" aria-label="금색 연결선" aria-pressed="true" style="--link-swatch:#ffe18a"><span class="v2-link-color-dot" aria-hidden="true"></span>금색</button>
-                    <button type="button" class="v2-link-color-option" data-link-color="mint" aria-label="민트색 연결선" aria-pressed="false" style="--link-swatch:#5eead4"><span class="v2-link-color-dot" aria-hidden="true"></span>민트</button>
-                    <button type="button" class="v2-link-color-option" data-link-color="violet" aria-label="보라색 연결선" aria-pressed="false" style="--link-swatch:#c4b5fd"><span class="v2-link-color-dot" aria-hidden="true"></span>보라</button>
-                    <button type="button" class="v2-link-color-option" data-link-color="coral" aria-label="분홍색 연결선" aria-pressed="false" style="--link-swatch:#fb7185"><span class="v2-link-color-dot" aria-hidden="true"></span>분홍</button>
-                    <span id="link-color-mode-hint" class="v2-link-color-hint" aria-live="polite">선 클릭: 삭제 · 색상 선택 후 선 클릭: 색 변경</span>
-                </div>
-                
-                <!-- v0.06: 클릭으로 상자를 지정해 마킹·메모 편집 -->
-                <div id="mark-tools" class="v2-mark-tools" role="group" aria-label="상자 마킹 및 메모 편집">
-                    <span class="v2-mark-tool-heading">마킹·메모</span>
-                    <span id="mark-target-label" class="v2-mark-target-label" aria-live="polite">상자 아래 표시를 선택하세요</span>
-                    <span class="v2-mark-tool-group" aria-label="마킹">
-                        <button type="button" data-mark-value="O" aria-label="진짜 상자 O 표시" aria-pressed="false" disabled>O</button>
-                        <button type="button" data-mark-value="X" aria-label="미믹 X 표시" aria-pressed="false" disabled>X</button>
-                        <button type="button" data-mark-value="?" aria-label="불확실 ? 표시" aria-pressed="false" disabled>?</button>
-                    </span>
-                    <span class="v2-mark-tool-heading">메모</span>
-                    <span class="v2-mark-tool-group" aria-label="숫자 메모">
-                        <button type="button" data-memo-value="1" aria-pressed="false" disabled>1</button>
-                        <button type="button" data-memo-value="2" aria-pressed="false" disabled>2</button>
-                        <button type="button" data-memo-value="3" aria-pressed="false" disabled>3</button>
-                        <button type="button" data-memo-value="4" aria-pressed="false" disabled>4</button>
-                        <button type="button" data-memo-value="5" aria-pressed="false" disabled>5</button>
-                    </span>
-                    <span class="v2-mark-hint">기존 단축키 Q/W/E · 1~5 유지</span>
-                </div>
+                <div id="info-treasures-list" class="flex flex-wrap justify-center items-center gap-2 md:gap-4 mb-4 bg-white px-3 py-2.5 rounded-xl shadow-sm border border-slate-200 w-full min-h-[48px]"></div>
 
-                <div id="chests-container" class="flex flex-col gap-4 items-center mx-auto mb-6 pt-5 w-full min-w-0 overflow-visible transition-all duration-300">
-                    <!-- Chests rendered here -->
+                <div id="board-stage" class="v2-board-stage">
+                    <div id="chests-container" class="flex flex-col gap-4 items-center mx-auto mb-6 pt-5 w-full min-w-0 overflow-visible transition-all duration-300">
+                        <!-- Chests rendered here -->
+                    </div>
+
+                    <!-- Keep existing IDs and button data attributes for game.js handlers. -->
+                    <div id="game-tool-palette" class="v2-game-tool-palette" role="toolbar" aria-label="추리 도구 팔레트">
+                        <span class="v2-palette-crest" aria-hidden="true"></span>
+
+                        <div id="link-color-picker" class="v2-link-color-picker v2-palette-section" role="group" aria-label="연결선 색상">
+                            <span class="v2-palette-heading v2-link-color-title">연결선</span>
+                            <div class="v2-palette-buttons">
+                                <button type="button" class="v2-link-color-option is-active" data-link-color="gold" aria-label="금색 연결선" aria-pressed="true" style="--link-swatch:#ffe18a"><span class="v2-link-color-dot" aria-hidden="true"></span></button>
+                                <button type="button" class="v2-link-color-option" data-link-color="mint" aria-label="민트색 연결선" aria-pressed="false" style="--link-swatch:#5eead4"><span class="v2-link-color-dot" aria-hidden="true"></span></button>
+                                <button type="button" class="v2-link-color-option" data-link-color="violet" aria-label="보라색 연결선" aria-pressed="false" style="--link-swatch:#c4b5fd"><span class="v2-link-color-dot" aria-hidden="true"></span></button>
+                                <button type="button" class="v2-link-color-option" data-link-color="coral" aria-label="분홍색 연결선" aria-pressed="false" style="--link-swatch:#fb7185"><span class="v2-link-color-dot" aria-hidden="true"></span></button>
+                            </div>
+                        </div>
+
+                        <div id="mark-tools" class="v2-mark-tools" role="group" aria-label="상자 마킹 및 메모 편집">
+                            <div class="v2-palette-section" role="group" aria-label="마킹">
+                                <span class="v2-palette-heading">마킹</span>
+                                <span class="v2-mark-tool-group v2-palette-buttons">
+                                    <button type="button" data-mark-value="O" aria-label="진짜 상자 O 표시" aria-pressed="false" disabled>O</button>
+                                    <button type="button" data-mark-value="X" aria-label="미믹 X 표시" aria-pressed="false" disabled>X</button>
+                                    <button type="button" data-mark-value="?" aria-label="불확실 ? 표시" aria-pressed="false" disabled>?</button>
+                                </span>
+                            </div>
+                            <div class="v2-palette-section" role="group" aria-label="숫자 메모">
+                                <span class="v2-palette-heading">메모</span>
+                                <span class="v2-mark-tool-group v2-palette-buttons">
+                                    <button type="button" data-memo-value="1" aria-pressed="false" disabled>1</button>
+                                    <button type="button" data-memo-value="2" aria-pressed="false" disabled>2</button>
+                                    <button type="button" data-memo-value="3" aria-pressed="false" disabled>3</button>
+                                    <button type="button" data-memo-value="4" aria-pressed="false" disabled>4</button>
+                                    <button type="button" data-memo-value="5" aria-pressed="false" disabled>5</button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="v2-palette-feedback" aria-live="polite">
+                            <span id="link-color-mode-hint" class="v2-link-color-hint">선 클릭: 삭제 · 색상 선택 후 선 클릭: 색 변경</span>
+                            <span id="mark-target-label" class="v2-mark-target-label">상자 아래 표시를 선택하세요</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
