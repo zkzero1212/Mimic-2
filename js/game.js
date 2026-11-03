@@ -1687,29 +1687,10 @@
             svg.setAttribute("width", String(width));
             svg.setAttribute("height", String(height));
             svg.setAttribute("role", "group");
-            svg.setAttribute("aria-label", "발언에서 상자 방향으로 화살표가 있는 연결선");
+            svg.setAttribute("aria-label", "발언에서 상자로 흰색 빛이 주기적으로 흐르는 연결선");
             svg.classList.add("v2-statement-links-layer");
 
-            // 화살표 꼭지점은 대상 상자를 향하며 출발점에는 작은 점을 표시합니다.
-            const defs = document.createElementNS(ns, "defs");
-            Object.entries(LINK_COLORS).forEach(([name, hex]) => {
-                const marker = document.createElementNS(ns, "marker");
-                marker.setAttribute("id", `v2-line-arrow-${name}`);
-                marker.setAttribute("markerWidth", "11");
-                marker.setAttribute("markerHeight", "11");
-                marker.setAttribute("refX", "9");
-                marker.setAttribute("refY", "5");
-                marker.setAttribute("orient", "auto");
-                marker.setAttribute("markerUnits", "userSpaceOnUse");
-                const arrow = document.createElementNS(ns, "path");
-                arrow.setAttribute("d", "M 1 1 L 9 5 L 1 9 Z");
-                arrow.setAttribute("fill", hex);
-                arrow.setAttribute("stroke", "#24191d");
-                arrow.setAttribute("stroke-width", ".8");
-                marker.appendChild(arrow);
-                defs.appendChild(marker);
-            });
-            svg.appendChild(defs);
+            // 흰색 빛이 출발점에서 도착점까지 진행하므로 화살표는 사용하지 않습니다.
 
             statementLinks.forEach(([from, to, savedColor = "gold"]) => {
                 const source = rowsWrapper.querySelector(`.v2-speech-card[data-statement-index="${from}"]`);
@@ -1721,8 +1702,8 @@
                 const y1 = a.bottom - wrapper.top;
                 const x2 = b.left + b.width / 2 - wrapper.left;
                 const y2 = b.top - wrapper.top;
-                // 대상이 위쪽에 있으면 위로, 아래쪽이면 아래로 진입하도록
-                // 제어점을 전환해 화살표가 항상 실제 연결 방향을 가리키게 합니다.
+                // 대상이 위쪽에 있으면 곡선도 위로 진입하도록 제어점을 전환합니다.
+                // 움직이는 펄스의 진행 방향은 SVG 경로의 시작(발언)→끝(상자)입니다.
                 const verticalDelta = y2 - y1;
                 const bend = Math.max(24, Math.abs(verticalDelta) * .45)
                     * (verticalDelta < 0 ? -1 : 1);
@@ -1746,11 +1727,28 @@
                 line.setAttribute("stroke", LINK_COLORS[color]);
                 line.setAttribute("stroke-width", isSelected ? "5.5" : "3");
                 line.setAttribute("stroke-linecap", "round");
-                line.setAttribute("marker-end", `url(#v2-line-arrow-${color})`);
                 line.style.color = LINK_COLORS[color];
                 line.classList.add("v2-statement-link-visible");
                 if (isSelected) line.classList.add("is-selected");
                 svg.appendChild(line);
+
+                // pathLength=100으로 경로 길이에 상관없이 빛이 발언→상자 방향으로 통과합니다.
+                // 짧은 흰색 구간만 이동하고 다음 주기까지 쉬어 심박 신호 같은 리듬을 만듭니다.
+                const pulse = document.createElementNS(ns, "path");
+                pulse.setAttribute("d", d);
+                pulse.setAttribute("pathLength", "100");
+                pulse.setAttribute("fill", "none");
+                pulse.setAttribute("stroke", "#fffdf4");
+                pulse.setAttribute("stroke-width", isSelected ? "5" : "4");
+                pulse.setAttribute("stroke-linecap", "round");
+                pulse.setAttribute("stroke-dasharray", "9 120");
+                pulse.setAttribute("stroke-dashoffset", "9");
+                pulse.setAttribute("pointer-events", "none");
+                pulse.classList.add("v2-statement-link-pulse");
+                // 다수의 선이 동시에 번쩍이지 않도록 간단한 시간차만 적용합니다.
+                pulse.style.animationDelay = `-${((from * 7 + to * 11) % 9 * 0.17).toFixed(2)}s`;
+                if (isSelected) pulse.classList.add("is-selected");
+                svg.appendChild(pulse);
 
                 // 16px의 투명 클릭 영역은 별개이므로 선 위에 올리기 편합니다.
                 const hit = document.createElementNS(ns, "path");
@@ -1761,7 +1759,7 @@
                 hit.setAttribute("stroke-linecap", "round");
                 hit.setAttribute("tabindex", "0");
                 hit.setAttribute("role", "button");
-                hit.setAttribute("aria-label", `발언 ${from + 1}에서 상자 ${to + 1}로 향하는 선 선택`);
+                hit.setAttribute("aria-label", `발언 ${from + 1}에서 상자 ${to + 1}로 흰 빛이 흐르는 연결선 선택`);
                 hit.classList.add("v2-statement-link-hit");
 
                 const selectLine = event => {
