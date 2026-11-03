@@ -34,7 +34,7 @@
                 <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-tight border-b border-slate-200 pb-1 flex flex-col items-center gap-1 text-center">
                     <span>현재 층 정보</span>
                     <!-- Build policy: v0.07a ... v0.07z, v0.07aa ... then v0.08 major. -->
-                    <span id="game-version" class="v2-build-version" title="현재 미믹 V2 개발 빌드">BUILD v0.07b</span>
+                    <span id="game-version" class="v2-build-version" title="현재 미믹 V2 개발 빌드">BUILD v0.07c</span>
                     <span class="text-[9px] font-extrabold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">최고 <span id="ui-max-floor">1</span>F</span>
                 </h3>
                 
@@ -168,6 +168,20 @@
             </div>
             <div class="v2-context-actions">
                 <button type="button" id="context-clear-links" class="v2-context-erase">연결선 지우개</button>
+            </div>
+        </div>
+        <div class="v2-context-mode" data-context-mode="line" hidden>
+            <div class="v2-context-section" role="group" aria-label="선택한 연결선 색상">
+                <span class="v2-context-title">이 연결선 색상</span>
+                <div class="v2-context-buttons v2-context-colors">
+                    <button type="button" data-context-line-color="gold" aria-label="이 선을 금색으로 변경" aria-pressed="false" style="--link-swatch:#ffe18a"></button>
+                    <button type="button" data-context-line-color="mint" aria-label="이 선을 민트색으로 변경" aria-pressed="false" style="--link-swatch:#5eead4"></button>
+                    <button type="button" data-context-line-color="violet" aria-label="이 선을 보라색으로 변경" aria-pressed="false" style="--link-swatch:#c4b5fd"></button>
+                    <button type="button" data-context-line-color="coral" aria-label="이 선을 분홍색으로 변경" aria-pressed="false" style="--link-swatch:#fb7185"></button>
+                </div>
+            </div>
+            <div class="v2-context-actions">
+                <button type="button" id="context-clear-line" class="v2-context-erase">이 연결선 지우개</button>
             </div>
         </div>
         <div class="v2-context-mode" data-context-mode="chest" hidden>
