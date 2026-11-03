@@ -27,6 +27,7 @@
             refreshLinkColorPicker();
             selectedStatementIdx = null;
             markToolbarActiveIdx = null;
+            closeStatementContextPalette();
             currentFloor = Math.max(1, Number(data.currentFloor) || 1);
             maxFloor = Math.max(1, Number(data.maxFloor) || 1);
             permCurses = data.permCurses || { random: false, sleepLevel: 0, addChests: 0, addMimics: 0 };
@@ -455,6 +456,7 @@
             statementLinks = [];
             selectedStatementIdx = null;
             markToolbarActiveIdx = null;
+            closeStatementContextPalette();
             currentTempCurses = {};
             currentEventLogs = [];
             isLuckEvent = false;
@@ -1532,7 +1534,7 @@
                     bubble.dataset.statementIndex = String(idx);
                     bubble.classList.toggle("v2-link-source-selected", !isPreview && selectedStatementIdx === idx);
                     if (!isPreview) {
-                        bubble.title = "좌클릭: 발언 선택 / 선택된 발언의 연결 대상 · 우클릭: 이 발언에서 나온 연결선 전체 해제";
+                        bubble.title = "좌클릭: 연결 선택 / 대상 선택 · 우클릭: 빠른 추리 팔레트";
                         // 우클릭은 상위 게임판에서 처리합니다.
                         // SVG 연결선이 발언 위를 지나가도 원래 발언 카드를 찾기 위함입니다.
                         bubble.addEventListener("click", event => {
@@ -1838,36 +1840,143 @@
         }
 
         const gameMapArea = container.parentElement || container;
-        let lastRightClickOnStatement = null;
-        // 일부 브라우저에서는 contextmenu 이벤트 전에 대상이 바뀔 수 있으므로
-        // 오른쪽 마우스 버튼을 누르는 순간에도 삭제합니다.
+        let contextChestIndex = null;
+        const contextPalette = document.getElementById("statement-context-palette");
+
+        function closeStatementContextPalette() {
+            if (!contextPalette) return;
+            contextPalette.hidden = true;
+            contextChestIndex = null;
+        }
+
+        function updateStatementContextPalette() {
+            if (!contextPalette || contextChestIndex === null) return;
+            const chest = chestsData[contextChestIndex];
+            if (!chest) { closeStatementContextPalette(); return; }
+            const coord = getCoord(contextChestIndex, currentGridLayout);
+            document.getElementById("context-chest-name").textContent = `${coord.name} 상자 추리 도구`;
+            const canAnnotate = !isGameOver && !chest.isOpen;
+            contextPalette.querySelectorAll("[data-context-mark]").forEach(button => {
+                button.disabled = !canAnnotate;
+                button.setAttribute("aria-pressed", String(canAnnotate && chest.mark === button.dataset.contextMark));
+            });
+            contextPalette.querySelectorAll("[data-context-memo]").forEach(button => {
+                button.disabled = !canAnnotate;
+                button.setAttribute("aria-pressed", String(canAnnotate && Array.isArray(chest.memo)
+                    && chest.memo.includes(Number(button.dataset.contextMemo))));
+            });
+            contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
+                button.setAttribute("aria-pressed", String(button.dataset.contextColor === selectedLinkColor));
+            });
+            const count = statementLinks.filter(([from]) => from === contextChestIndex).length;
+            const clear = document.getElementById("context-clear-links");
+            clear.disabled = count === 0;
+            clear.textContent = count > 0
+                ? `이 발언의 연결선 삭제 (${count}개)` : "연결된 선 없음";
+            document.getElementById("context-start-link").disabled = isGameOver;
+        }
+
+        function openStatementContextPalette(idx, x, y) {
+            if (!contextPalette || !chestsData[idx]) return;
+            contextChestIndex = idx;
+            // 하단 도구 팔레트와 같은 상자를 대상으로 편집합니다.
+            markToolbarActiveIdx = idx;
+            updateMarkToolbar();
+            updateStatementContextPalette();
+            contextPalette.hidden = false;
+            contextPalette.style.visibility = "hidden";
+            const w = contextPalette.offsetWidth;
+            const h = contextPalette.offsetHeight;
+            const margin = 8;
+            const left = Math.max(margin, Math.min(x - w / 2, window.innerWidth - w - margin));
+            const above = y - h - 12;
+            const top = above >= margin
+                ? above
+                : Math.max(margin, Math.min(y + 12, window.innerHeight - h - margin));
+            contextPalette.style.left = Math.round(left) + "px";
+            contextPalette.style.top = Math.round(top) + "px";
+            contextPalette.style.visibility = "";
+        }
+
+        document.getElementById("context-palette-close").addEventListener("click", closeStatementContextPalette);
+        contextPalette.querySelectorAll("[data-context-mark]").forEach(button => {
+            button.addEventListener("click", () => {
+                if (contextChestIndex === null || button.disabled) return;
+                toggleMark(contextChestIndex, button.dataset.contextMark);
+                updateStatementContextPalette();
+            });
+        });
+        contextPalette.querySelectorAll("[data-context-memo]").forEach(button => {
+            button.addEventListener("click", () => {
+                if (contextChestIndex === null || button.disabled) return;
+                toggleMemo(contextChestIndex, Number(button.dataset.contextMemo));
+                updateStatementContextPalette();
+            });
+        });
+        contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
+            button.addEventListener("click", () => {
+                if (contextChestIndex === null) return;
+                const color = button.dataset.contextColor;
+                if (!Object.hasOwn(LINK_COLORS, color)) return;
+                selectedLinkColor = color;
+                linkRecolorPending = true;
+                refreshLinkColorPicker();
+                closeStatementContextPalette();
+                if (window.autoSaveToCloud) window.autoSaveToCloud();
+            });
+        });
+        document.getElementById("context-start-link").addEventListener("click", () => {
+            if (contextChestIndex === null || isGameOver) return;
+            selectedStatementIdx = contextChestIndex;
+            closeStatementContextPalette();
+            renderChests();
+        });
+        document.getElementById("context-clear-links").addEventListener("click", () => {
+            if (contextChestIndex === null) return;
+            removeOutgoingStatementLinks(contextChestIndex);
+            closeStatementContextPalette();
+        });
+
+        // 오른쪽 클릭은 발언에서만 퀵 팔레트를 열고, 그 외 게임 영역에서는 메뉴만 차단합니다.
+        // pointerdown과 contextmenu 둘 다 지원해 브라우저별 동작 차이를 줄입니다.
+        let lastPaletteRightClick = null;
         container.addEventListener("pointerdown", event => {
             if (event.button !== 2) return;
             const idx = findStatementAtPointer(event);
-            if (idx === null) return;
+            if (idx === null) { closeStatementContextPalette(); return; }
             event.preventDefault();
             event.stopPropagation();
-            lastRightClickOnStatement = { x: event.clientX, y: event.clientY, at: Date.now() };
-            removeOutgoingStatementLinks(idx);
+            lastPaletteRightClick = { x:event.clientX, y:event.clientY, idx, at:Date.now() };
+            openStatementContextPalette(idx, event.clientX, event.clientY);
         }, true);
+
         document.addEventListener("contextmenu", event => {
             const rect = gameMapArea.getBoundingClientRect();
             const pointerInsideMap = event.clientX >= rect.left && event.clientX <= rect.right
                 && event.clientY >= rect.top && event.clientY <= rect.bottom;
-            // 상자·발언·연결선·빈 게임판·상단 도구를 포함해 게임 영역 전체의
-            // 브라우저 기본 우클릭 메뉴를 차단합니다. 외부 UI의 우클릭은 유지합니다.
-            if (!gameMapArea.contains(event.target) && !pointerInsideMap) return;
+            if (!gameMapArea.contains(event.target) && !pointerInsideMap && !contextPalette.contains(event.target)) return;
             event.preventDefault();
             event.stopPropagation();
-            const last = lastRightClickOnStatement;
-            // 직전 우클릭에서 DOM을 다시 그린 경우에도 기본 메뉴 없이 종료합니다.
-            const sameRightClick = last && Date.now() - last.at < 4000
+            if (contextPalette.contains(event.target)) return;
+            const last = lastPaletteRightClick;
+            const alreadyOpened = last && Date.now() - last.at < 1500
                 && Math.abs(last.x - event.clientX) < 12
                 && Math.abs(last.y - event.clientY) < 12;
+            lastPaletteRightClick = null;
+            if (alreadyOpened) return;
             const idx = findStatementAtPointer(event);
-            lastRightClickOnStatement = null;
-            // 발언에서 우클릭했을 때만 연결선 해제. 그 외 공간은 메뉴 차단만 합니다.
-            if (!sameRightClick && idx !== null) removeOutgoingStatementLinks(idx);
+            if (idx !== null) openStatementContextPalette(idx, event.clientX, event.clientY);
+            else closeStatementContextPalette();
+        }, true);
+
+        document.addEventListener("pointerdown", event => {
+            if (!contextPalette || contextPalette.hidden) return;
+            if (contextPalette.contains(event.target) || (event.button === 2 && container.contains(event.target))) return;
+            closeStatementContextPalette();
+        }, true);
+        window.addEventListener("resize", closeStatementContextPalette);
+        window.addEventListener("scroll", event => {
+            if (!contextPalette.contains(event.target)) closeStatementContextPalette();
         }, true);
 
         function toggleStatementLink(from, to) {
@@ -2019,6 +2128,7 @@
             statementLinks = [];
             selectedStatementIdx = null;
             markToolbarActiveIdx = null;
+            closeStatementContextPalette();
             linkRecolorPending = false;
             refreshLinkColorPicker();
             renderChests();
@@ -2034,6 +2144,11 @@
             if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
             const pressedKey = e.key.toLowerCase();
 
+            if (pressedKey === 'escape' && contextPalette && !contextPalette.hidden) {
+                e.preventDefault();
+                closeStatementContextPalette();
+                return;
+            }
             if (pressedKey === 'escape' && linkRecolorPending) {
                 linkRecolorPending = false;
                 refreshLinkColorPicker();
