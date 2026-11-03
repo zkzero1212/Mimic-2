@@ -295,3 +295,39 @@ header p { display:none !important; }
   cursor: pointer;
 }
 #debug-clear-floor:hover { background: #713832; }
+
+
+/* v0.05 — center the complete chest formation without changing chest spacing */
+#chests-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+#chests-container > div {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+#chests-container > div > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+#chests-container > div > div > div {
+  display: grid !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  grid-template-columns: unset !important;
+}
+.v2-board-item {
+  width: 8.5rem !important;
+  min-width: 8.5rem !important;
+  max-width: 8.5rem !important;
+}
