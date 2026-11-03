@@ -17,21 +17,15 @@
         <!-- Header -->
         <header class="text-center mb-6">
             <h1 class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-1 drop-shadow-sm">
-                미믹 로직: 등반 모드 <span id="game-version" class="inline-block align-middle ml-1 text-xs md:text-sm font-bold text-slate-400 tracking-normal">v0.02</span>
+                미믹 로직: 등반 모드 <span id="game-version" class="inline-block align-middle ml-1 text-xs md:text-sm font-bold text-slate-400 tracking-normal">v0.03</span>
             </h1>
-            <p class="text-slate-500 text-xs md:text-sm">끝없이 높아지는 탑을 오르며 모든 진짜 보물을 찾으세요!</p>
+            <p class="text-slate-500 text-xs md:text-sm" aria-hidden="true"></p>
         </header>
 
         <!-- Status Message -->
-        <div id="status-message" class="text-center text-lg font-bold mb-4 h-7 text-indigo-700 drop-shadow-sm">
-            탑 입구에 도달했습니다. 잠시 후 등반을 시작합니다...
-        </div>
-        
+        <div id="status-message" class="hidden" aria-hidden="true"></div>
         <!-- Generating Warning -->
-        <div id="gen-warning" class="invisible h-7 text-center text-xs text-amber-600 mb-3 animate-pulse font-bold">
-            맵을 생성 중입니다...
-        </div>
-
+        <div id="gen-warning" class="hidden" aria-hidden="true"></div>
         <!-- Main Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-2 items-start w-full">
             
@@ -97,57 +91,19 @@
                 <!-- 가로형 구성품 리스트 -->
                 <div id="info-treasures-list" class="flex flex-wrap justify-center items-center gap-2 md:gap-4 mb-4 bg-white px-3 py-2.5 rounded-xl shadow-sm border border-slate-200 w-full min-h-[48px]">
                 </div>
-                <!-- DEBUG CHEST LAYOUT PREVIEW: isolated removable feature -->
-                <section id="debug-layout-panel" class="hidden w-full mb-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3">
-                    <div class="flex items-center justify-between gap-3 mb-2">
-                        <div><h3 class="text-xs font-extrabold text-amber-900">디버그 모드 · 상자 배치 미리보기</h3><p class="text-[10px] text-amber-800">실제 게임 진행 데이터에는 영향을 주지 않습니다.</p></div>
-                        <span id="debug-chest-count" class="text-sm font-extrabold text-amber-900 tabular-nums">4개</span>
-                    </div>
-                    <input id="debug-chest-slider" type="range" min="3" max="9" step="1" value="4" class="w-full accent-amber-600 cursor-pointer" aria-label="미리보기 상자 개수">
-                    <div class="flex justify-between text-[10px] text-amber-700"><span>3개</span><span>9개</span></div>
-                    <div id="debug-layout-preview" class="mt-3 flex flex-col gap-4 items-center w-full rounded-lg bg-white/80 p-2"></div>
-                    <div id="debug-floor-tools" class="mt-3 pt-3 border-t border-amber-200 flex flex-col gap-2">
-                        <div class="text-[11px] font-extrabold text-amber-900">층 테스트 도구</div>
-                        <div class="flex items-center gap-2">
-                            <label for="debug-floor-number" class="text-xs font-bold text-amber-900 whitespace-nowrap">이동할 층</label>
-                            <input id="debug-floor-number" type="number" min="1" max="999" value="1" class="w-24 rounded-lg border border-amber-300 px-2 py-1 text-sm">
-                            <button id="debug-go-floor" type="button" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white">층 이동</button>
-                        </div>
-                        <button id="debug-clear-floor" type="button" class="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800">현재 층 클리어 (미믹 제외 전부 개방)</button>
-                    </div>
-                    
-                </section>
-                <div class="flex justify-end w-full mt-1 mb-2"><button id="debug-layout-toggle" type="button" class="text-[10px] font-bold text-slate-500 hover:text-amber-700 border border-slate-200 hover:border-amber-300 bg-white px-2.5 py-1 rounded-lg transition-colors">디버그 모드 열기</button></div>
-                <!-- END DEBUG CHEST LAYOUT PREVIEW -->
+                
                 <div id="chests-container" class="flex flex-col gap-4 items-center mx-auto mb-6 pt-5 w-full min-w-0 overflow-visible transition-all duration-300">
                     <!-- Chests rendered here -->
                 </div>
             </div>
 
-            <!-- Right Control Panel -->
-            <div id="right-control-panel" class="bg-white rounded-xl p-1.5 shadow-sm border border-slate-200 lg:col-span-1 flex flex-col gap-1.5 min-w-0 text-[10px]">
-                
-                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-1.5">진행 및 액션</h3>
-                
-                <button id="btn-next-floor" class="hidden w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold py-3 px-4 rounded-lg shadow-md transition-all text-sm mb-2 animate-bounce">
-                    다음 층으로 진행 (R)
-                </button>
-                <button id="btn-restart" class="hidden w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg shadow-sm transition-colors text-sm mb-2">
-                    기록 종료 및 재시작 (R)
-                </button>
-
-                <div id="gameplay-controls" class="flex flex-col gap-2 w-full mt-2">
-                    <button id="btn-open-o" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-lg shadow-sm transition-colors text-xs flex items-center justify-center gap-2">
-                        ⭕ 마킹 모두 열기 (Z)
-                    </button>
-                    <button id="btn-clear-marks" class="w-full bg-slate-500 hover:bg-slate-600 text-white font-bold py-2.5 px-3 rounded-lg shadow-sm transition-colors text-xs flex items-center justify-center gap-2">
-                        🧹 마킹/메모 모두 지우기 (X)
-                    </button>
-                </div>
-
-
+            <!-- 기존 키보드 단축키 로직 호환용 숨김 컨트롤 -->
+            <div class="hidden" aria-hidden="true">
+                <button id="btn-next-floor" type="button"></button>
+                <button id="btn-restart" type="button"></button>
+                <button id="btn-open-o" type="button"></button>
+                <button id="btn-clear-marks" type="button"></button>
             </div>
-
         </div>
     </div>
 
