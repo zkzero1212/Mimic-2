@@ -148,42 +148,48 @@
     </div>
 
 
-    <!-- v0.07: 발언 우클릭 빠른 추리 팔레트. 게임판 바깥에 두어 재렌더링 시에도 유지합니다. -->
-    <div id="statement-context-palette" class="v2-statement-context-palette" role="dialog" aria-label="발언 빠른 추리 팔레트" aria-modal="false" hidden>
+    <!-- v0.07: 발언/상자별 우클릭 빠른 도구. 기본 브라우저 메뉴는 게임판에서 차단됩니다. -->
+    <div id="statement-context-palette" class="v2-statement-context-palette" role="dialog" aria-label="빠른 추리 팔레트" aria-modal="false" hidden>
         <div class="v2-context-header">
-            <span id="context-chest-name">상자 추리 도구</span>
+            <span id="context-chest-name">추리 도구</span>
             <button type="button" id="context-palette-close" aria-label="빠른 팔레트 닫기">×</button>
         </div>
-        <div class="v2-context-section" role="group" aria-label="연결선 색상">
-            <span class="v2-context-title">연결선 색상</span>
-            <div class="v2-context-buttons v2-context-colors">
-                <button type="button" data-context-color="gold" aria-label="금색 선 선택" aria-pressed="true" style="--link-swatch:#ffe18a"></button>
-                <button type="button" data-context-color="mint" aria-label="민트색 선 선택" aria-pressed="false" style="--link-swatch:#5eead4"></button>
-                <button type="button" data-context-color="violet" aria-label="보라색 선 선택" aria-pressed="false" style="--link-swatch:#c4b5fd"></button>
-                <button type="button" data-context-color="coral" aria-label="분홍색 선 선택" aria-pressed="false" style="--link-swatch:#fb7185"></button>
+        <div class="v2-context-mode" data-context-mode="statement">
+            <div class="v2-context-section" role="group" aria-label="발언 연결선 색상">
+                <span class="v2-context-title">연결선 색상</span>
+                <div class="v2-context-buttons v2-context-colors">
+                    <button type="button" data-context-color="gold" aria-label="금색 연결선" aria-pressed="true" style="--link-swatch:#ffe18a"></button>
+                    <button type="button" data-context-color="mint" aria-label="민트색 연결선" aria-pressed="false" style="--link-swatch:#5eead4"></button>
+                    <button type="button" data-context-color="violet" aria-label="보라색 연결선" aria-pressed="false" style="--link-swatch:#c4b5fd"></button>
+                    <button type="button" data-context-color="coral" aria-label="분홍색 연결선" aria-pressed="false" style="--link-swatch:#fb7185"></button>
+                </div>
+            </div>
+            <div class="v2-context-actions">
+                <button type="button" id="context-clear-links" class="v2-context-erase">연결선 지우개</button>
             </div>
         </div>
-        <div class="v2-context-section" role="group" aria-label="상자 마킹">
-            <span class="v2-context-title">마킹</span>
-            <div class="v2-context-buttons">
-                <button type="button" data-context-mark="O" aria-pressed="false">O</button>
-                <button type="button" data-context-mark="X" aria-pressed="false">X</button>
-                <button type="button" data-context-mark="?" aria-pressed="false">?</button>
+        <div class="v2-context-mode" data-context-mode="chest" hidden>
+            <div class="v2-context-section" role="group" aria-label="상자 마킹">
+                <span class="v2-context-title">마킹</span>
+                <div class="v2-context-buttons">
+                    <button type="button" data-context-mark="O" aria-pressed="false">O</button>
+                    <button type="button" data-context-mark="X" aria-pressed="false">X</button>
+                    <button type="button" data-context-mark="?" aria-pressed="false">?</button>
+                </div>
             </div>
-        </div>
-        <div class="v2-context-section" role="group" aria-label="숫자 메모">
-            <span class="v2-context-title">메모</span>
-            <div class="v2-context-buttons">
-                <button type="button" data-context-memo="1" aria-pressed="false">1</button>
-                <button type="button" data-context-memo="2" aria-pressed="false">2</button>
-                <button type="button" data-context-memo="3" aria-pressed="false">3</button>
-                <button type="button" data-context-memo="4" aria-pressed="false">4</button>
-                <button type="button" data-context-memo="5" aria-pressed="false">5</button>
+            <div class="v2-context-section" role="group" aria-label="숫자 메모">
+                <span class="v2-context-title">메모</span>
+                <div class="v2-context-buttons">
+                    <button type="button" data-context-memo="1" aria-pressed="false">1</button>
+                    <button type="button" data-context-memo="2" aria-pressed="false">2</button>
+                    <button type="button" data-context-memo="3" aria-pressed="false">3</button>
+                    <button type="button" data-context-memo="4" aria-pressed="false">4</button>
+                    <button type="button" data-context-memo="5" aria-pressed="false">5</button>
+                </div>
             </div>
-        </div>
-        <div class="v2-context-actions">
-            <button type="button" id="context-start-link">이 발언에서 연결 시작</button>
-            <button type="button" id="context-clear-links">이 발언의 연결선 삭제</button>
+            <div class="v2-context-actions">
+                <button type="button" id="context-clear-marks" class="v2-context-erase">마킹·메모 지우개</button>
+            </div>
         </div>
     </div>
 
