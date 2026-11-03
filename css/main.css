@@ -1259,14 +1259,20 @@ header p { display:none !important; }
 .v2-floor-result-card[data-result="mimic"] .v2-result-emblem {color:#ff9994;text-shadow:0 0 16px rgba(246,76,69,.64);}
 .v2-floor-result-card[data-result="mimic"] .v2-result-eyebrow {color:#ffaea5;}
 .v2-floor-result-card[data-result="mimic"] #floor-result-primary {background:linear-gradient(#a76159,#693638);border-color:#e19e8b;color:#fff2e4;}
-/* Entry and exit use exactly the same frames and duration, reversed on close. */
+/* v0.08d: Exit must have its OWN animation name.
+   Reversing the already-completed entry animation makes the card jump to
+   opacity 0 immediately in some browsers, even if the stage switch waits. */
 #floor-result-overlay.is-closing .v2-floor-result-card {
-  animation: v2-floor-result-enter .32s ease-in reverse both;
+  animation: v2-floor-result-exit .32s ease-in both;
   pointer-events: none;
 }
 @keyframes v2-floor-result-enter {
   from {opacity:0;transform:translateY(12px) scale(.98);}
   to {opacity:1;transform:translateY(0) scale(1);}
+}
+@keyframes v2-floor-result-exit {
+  from {opacity:1;transform:translateY(0) scale(1);}
+  to {opacity:0;transform:translateY(12px) scale(.98);}
 }
 @media(prefers-reduced-motion:reduce) {
   #chests-container .v2-chest-sprite.v2-chest-reveal-flash::after,
