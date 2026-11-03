@@ -1415,8 +1415,8 @@
                 const isWideScreen = window.matchMedia('(min-width: 768px)').matches;
                 // 실제 상자 래퍼 폭(8rem)에 맞춰 트랙을 줄여 화면에서 상자 사이 간격을 축소합니다.
                 // 벌집형은 상자당 2트랙이므로 4rem, 일반형은 8.5rem으로 설정합니다.
-                const gridTrack = layout.honeycomb ? 2.5 : 8.5;
-                rowContainer.style.gridTemplateColumns = `repeat(${layout.honeycomb ? layout.cols * 2 : layout.cols}, ${gridTrack}rem)`;
+                const boardColumns = layout.honeycomb ? layout.cols * 2 : 9;
+                rowContainer.style.setProperty('--board-columns', String(boardColumns));
                 rowContainer.style.columnGap = '0px';
                 rowContainer.style.flexShrink = "0";
                 rowGroups[r].sort((a, b) => layout.pos[a][1] - layout.pos[b][1]);
@@ -1495,7 +1495,12 @@
                         }
                         actionWrap.appendChild(markBadge);
                     }
-                    chestWrap.appendChild(actionWrap); chestWrap.style.gridColumnStart = String(layout.honeycomb ? layout.pos[idx][1] * 2 + 1 : layout.pos[idx][1] + 1); chestWrap.style.gridColumnEnd = layout.honeycomb ? 'span 2' : 'span 1'; rowContainer.appendChild(chestWrap);
+                    chestWrap.appendChild(actionWrap); const baseColumn = layout.honeycomb ? layout.pos[idx][1] * 2 : layout.pos[idx][1];
+                    const occupiedColumns = layout.honeycomb ? layout.cols * 2 : layout.cols;
+                    const centeredOffset = Math.floor((boardColumns - occupiedColumns) / 2);
+                    chestWrap.style.gridColumnStart = String(baseColumn + centeredOffset + 1);
+                    chestWrap.style.gridColumnEnd = layout.honeycomb ? 'span 2' : 'span 1';
+                    rowContainer.appendChild(chestWrap);
                 }
                 rowsWrapper.appendChild(rowContainer);
             }
