@@ -826,3 +826,30 @@ header p { display:none !important; }
   .v2-statement-link-visible.is-hovered:not(.is-selected) { animation:none; stroke-width:4; opacity:1; }
   .v2-board-item .v2-speech-card.v2-link-source-selected { transition:none; }
 }
+
+/* v0.07 refinement — periodic light pulse instead of static arrowheads.
+   A short bright segment traverses the path in ~0.7s, then rests for ~1.6s. */
+.v2-statement-link-pulse {
+  pointer-events: none !important;
+  stroke: #fffdf4;
+  stroke-dasharray: 9 120;
+  stroke-dashoffset: 9;
+  opacity: 0;
+  filter: drop-shadow(0 0 2px rgba(21, 15, 19, .95))
+          drop-shadow(0 0 3px rgba(255, 255, 240, .85));
+  animation: v2-line-pulse-flow 2.35s linear infinite;
+}
+.v2-statement-link-pulse.is-selected {
+  stroke-width: 5;
+  filter: drop-shadow(0 0 2px #171219)
+          drop-shadow(0 0 5px rgba(255, 255, 255, .98));
+}
+@keyframes v2-line-pulse-flow {
+  0% { stroke-dashoffset: 9; opacity: 0; }
+  3% { opacity: 1; }
+  29% { stroke-dashoffset: -100; opacity: 1; }
+  31%, 100% { stroke-dashoffset: -100; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v2-statement-link-pulse { animation: none !important; opacity: 0 !important; }
+}
