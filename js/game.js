@@ -193,7 +193,7 @@
                         from === selectedLineLink[0] && to === selectedLineLink[1])) {
                     const from = getCoord(selectedLineLink[0], currentGridLayout).name;
                     const to = getCoord(selectedLineLink[1], currentGridLayout).name;
-                    hint.textContent = `선 선택: ${from} → ${to} · 우클릭: 색상/지우개 · Esc 해제`;
+                    hint.textContent = `선 선택: ${from} → ${to} · 우클릭: 색상/지우개 · Delete: 선 삭제`;
                 } else if (selectedStatementIdx !== null && currentGridLayout) {
                     const source = getCoord(selectedStatementIdx, currentGridLayout).name;
                     hint.textContent = `발언 선택: ${source} · 연결할 발언/상자 클릭 · Esc 해제`;
@@ -2019,11 +2019,9 @@
                 : kind === "statement" ? "발언 연결선 색상·지우개" : "상자 마킹·메모·지우개");
 
             contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
-                const matchingLine = selectedLineLink?.[0] === idx
-                    ? statementLinks.find(link => link[0] === selectedLineLink[0] && link[1] === selectedLineLink[1])
-                    : null;
-                const currentColor = matchingLine?.[2] || selectedLinkColor;
-                button.setAttribute("aria-pressed", String(currentColor === button.dataset.contextColor));
+                // 발언용 색상은 새 연결선의 색상입니다.
+                // 이미 선택된 선의 색상과는 분리해 우클릭 메뉴가 오작동하지 않도록 합니다.
+                button.setAttribute("aria-pressed", String(selectedLinkColor === button.dataset.contextColor));
                 button.disabled = isGameOver;
             });
 
@@ -2074,11 +2072,26 @@
             const width = contextPalette.offsetWidth;
             const height = contextPalette.offsetHeight;
             const margin = 8;
-            const left = Math.max(margin, Math.min(x - width / 2, window.innerWidth - width - margin));
-            const above = y - height - 12;
-            const top = above >= margin
-                ? above
-                : Math.max(margin, Math.min(y + 12, window.innerHeight - height - margin));
+            // 보이는 화면 안에서 커서의 좌·우/위·아래 공간에 맞춰 메뉴를 배치합니다.
+            // 화면이 좁아도 팔레트의 바깥 부분이 잘리지 않도록 위치를 보정합니다.
+            const viewport = window.visualViewport;
+            const viewLeft = viewport ? viewport.offsetLeft : 0;
+            const viewTop = viewport ? viewport.offsetTop : 0;
+            const viewRight = viewLeft + (viewport ? viewport.width : window.innerWidth);
+            const viewBottom = viewTop + (viewport ? viewport.height : window.innerHeight);
+            const roomRight = viewRight - x;
+            const roomLeft = x - viewLeft;
+            const preferredX = roomRight >= width + 12 + margin
+                ? x + 12
+                : roomLeft >= width + 12 + margin ? x - width - 12 : x - width / 2;
+            const left = Math.max(viewLeft + margin,
+                Math.min(preferredX, Math.max(viewLeft + margin, viewRight - width - margin)));
+            const roomAbove = y - viewTop;
+            const roomBelow = viewBottom - y;
+            const preferredY = roomAbove >= height + 12 + margin || roomAbove > roomBelow
+                ? y - height - 12 : y + 12;
+            const top = Math.max(viewTop + margin,
+                Math.min(preferredY, Math.max(viewTop + margin, viewBottom - height - margin)));
             contextPalette.style.left = Math.round(left) + "px";
             contextPalette.style.top = Math.round(top) + "px";
             contextPalette.style.visibility = "";
@@ -2086,8 +2099,8 @@
 
         document.getElementById("context-palette-close").addEventListener("click", closeStatementContextPalette);
 
-        // 발언 우클릭: 색을 고르면 그 발언을 출발점으로 선택합니다.
-        // 이미 선이 선택되어 있고 같은 발언에서 나온 선이면 그 선 하나의 색만 변경합니다.
+        // 발언 우클릭 색상은 항상 '새 연결 출발'만 담당합니다.
+        // 기존 선의 개별 색 변경은 선 자체를 우클릭해야 합니다.
         contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
             button.addEventListener("click", () => {
                 if (!contextTarget || contextTarget.kind !== "statement" || isGameOver) return;
@@ -2096,17 +2109,8 @@
                 if (!Object.hasOwn(LINK_COLORS, color)) return;
                 selectedLinkColor = color;
                 linkRecolorPending = false;
-                const matchingLine = selectedLineLink?.[0] === idx
-                    ? statementLinks.find(link => link[0] === selectedLineLink[0] && link[1] === selectedLineLink[1])
-                    : null;
-                if (matchingLine) {
-                    matchingLine[2] = color;
-                    selectedStatementIdx = null;
-                } else {
-                    selectedStatementIdx = idx;
-                    selectedLineLink = null;
-                }
-                refreshLinkColorPicker();
+                selectedStatementIdx = idx;
+                selectedLineLink = null;
                 closeStatementContextPalette();
                 renderChests();
                 if (window.autoSaveToCloud) window.autoSaveToCloud();
@@ -2245,25 +2249,28 @@
             if (isGameOver || from === to || !chestsData[from] || !chestsData[to]) return;
             const existing = statementLinks.findIndex(link => link[0] === from && link[1] === to);
             let message;
+            let changed = false;
             if (existing >= 0) {
-                if (statementLinks[existing][2] === selectedLinkColor) {
-                    statementLinks.splice(existing, 1);
-                    message = "발언-상자 연결을 해제했습니다.";
-                } else {
+                if (statementLinks[existing][2] !== selectedLinkColor) {
                     statementLinks[existing][2] = selectedLinkColor;
                     message = "기존 연결선의 색상을 변경했습니다.";
+                    changed = true;
+                } else {
+                    // 같은 연결을 다시 누르는 경우에는 삭제 대신 선택만 수행합니다.
+                    message = "기존 연결선을 선택했습니다. Delete 또는 우클릭 지우개로 삭제할 수 있습니다.";
                 }
             } else {
                 statementLinks.push([from, to, selectedLinkColor]);
                 message = "선택한 색상으로 발언과 상자를 연결했습니다.";
+                changed = true;
             }
             selectedStatementIdx = null;
-            selectedLineLink = existing >= 0 && message === "발언-상자 연결을 해제했습니다."
-                ? null : [from, to];
+            selectedLineLink = [from, to];
+            linkRecolorPending = false;
+            renderChests();
             statusMsg.innerText = message;
             statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
-            renderChests();
-            if (window.autoSaveToCloud) window.autoSaveToCloud();
+            if (changed && window.autoSaveToCloud) window.autoSaveToCloud();
         }
 
         function toggleMark(idx, markType) { if (isGameOver || chestsData[idx].isOpen) return; chestsData[idx].mark = (chestsData[idx].mark === markType) ? null : markType; renderChests(); if(window.autoSaveToCloud) window.autoSaveToCloud(); }
@@ -2423,6 +2430,24 @@
             if (pressedKey === 'escape' && (selectedStatementIdx !== null || selectedLineLink !== null)) {
                 e.preventDefault();
                 clearActiveStatementSelection();
+                return;
+            }
+
+            // 선택된 연결선 하나만 Delete/Backspace로 지웁니다. 전체 초기화 X는 그대로 유지.
+            if ((pressedKey === 'delete' || pressedKey === 'backspace')
+                && selectedLineLink && (!contextPalette || contextPalette.hidden)) {
+                e.preventDefault();
+                const [from, to] = selectedLineLink;
+                const oldCount = statementLinks.length;
+                statementLinks = statementLinks.filter(link => !(link[0] === from && link[1] === to));
+                selectedLineLink = null;
+                selectedStatementIdx = null;
+                renderChests();
+                if (oldCount !== statementLinks.length) {
+                    statusMsg.innerText = "선택한 연결선 하나를 삭제했습니다.";
+                    statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
+                    if (window.autoSaveToCloud) window.autoSaveToCloud();
+                }
                 return;
             }
 
