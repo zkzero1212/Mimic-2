@@ -185,9 +185,22 @@
                 button.setAttribute("aria-pressed", String(active));
             });
             const hint = document.getElementById("link-color-mode-hint");
-            if (hint) hint.textContent = linkRecolorPending
-                ? "색상 변경 대기 — 선을 클릭하세요 (Esc 취소)"
-                : "선 클릭: 삭제 · 색상 선택 후 선 클릭: 색 변경";
+            if (hint) {
+                if (linkRecolorPending) {
+                    hint.textContent = "색상 변경 대기 · 선 클릭으로 적용 (Esc 취소)";
+                } else if (selectedLineLink && currentGridLayout
+                    && statementLinks.some(([from, to]) =>
+                        from === selectedLineLink[0] && to === selectedLineLink[1])) {
+                    const from = getCoord(selectedLineLink[0], currentGridLayout).name;
+                    const to = getCoord(selectedLineLink[1], currentGridLayout).name;
+                    hint.textContent = `선 선택: ${from} → ${to} · 우클릭: 색상/지우개 · Esc 해제`;
+                } else if (selectedStatementIdx !== null && currentGridLayout) {
+                    const source = getCoord(selectedStatementIdx, currentGridLayout).name;
+                    hint.textContent = `발언 선택: ${source} · 연결할 발언/상자 클릭 · Esc 해제`;
+                } else {
+                    hint.textContent = "선 클릭: 선택 · 선 우클릭: 색상/지우개 · 발언 클릭: 연결 시작";
+                }
+            }
         }
         document.querySelectorAll("#link-color-picker [data-link-color]").forEach(button => {
             button.addEventListener("click", () => {
@@ -1673,6 +1686,7 @@
                         stage.classList.toggle("v2-palette-inline", overlaps);
                     }
                 }
+                refreshLinkColorPicker();
                 updateMarkToolbar();
             }
         }
@@ -1927,10 +1941,35 @@
 
         // SVG 선과 겹치는 경우에도 눈에 보이는 발언/상자를 기준으로 대상 판별.
         function findContextTargetAtPointer(event) {
+            // 호버 레이어 뒤에 숨어 있는 객체가 우클릭 대상이 되지 않도록
+            // 실제 이벤트 대상이 말풍선/상자/선 중 하나면 우선 사용합니다.
+            const direct = event.target instanceof Element ? event.target : null;
+            if (direct && container.contains(direct)) {
+                const directBubble = direct.closest(".v2-speech-card[data-statement-index]");
+                if (directBubble) {
+                    const idx = Number(directBubble.dataset.statementIndex);
+                    if (Number.isInteger(idx) && idx >= 0 && idx < chestsData.length)
+                        return {kind:"statement", idx};
+                }
+                const directChest = direct.closest(".v2-chest-sprite[data-chest-index]");
+                if (directChest) {
+                    const idx = Number(directChest.dataset.chestIndex);
+                    if (Number.isInteger(idx) && idx >= 0 && idx < chestsData.length)
+                        return {kind:"chest", idx};
+                }
+                const directHit = direct.closest(".v2-statement-link-hit[data-link-from][data-link-to]");
+                if (directHit) {
+                    const from = Number(directHit.dataset.linkFrom);
+                    const to = Number(directHit.dataset.linkTo);
+                    if (Number.isInteger(from) && Number.isInteger(to)
+                        && statementLinks.some(([a, b]) => a === from && b === to))
+                        return {kind:"line", idx:from, to};
+                }
+            }
             const elements = document.elementsFromPoint
                 ? document.elementsFromPoint(event.clientX, event.clientY)
                 : [event.target];
-            // 겹쳐진 말풍선/상자보다 실제 연결선의 넓은 클릭 영역을 먼저 탐색합니다.
+            // DOM이 변경되어 원래 요소가 사라졌다면 포인터 아래 실제 요소를 찾습니다.
             for (const element of elements) {
                 if (!(element instanceof Element) || !container.contains(element)) continue;
                 const lineHit = element.closest(".v2-statement-link-hit[data-link-from][data-link-to]");
@@ -2141,6 +2180,11 @@
         document.addEventListener("pointerdown", event => {
             if (event.button !== 0 && event.button !== 2) return;
             if (contextPalette.contains(event.target)) return;
+            // 플로팅 도구 위 우클릭이 그 뒤의 말풍선/연결선을 선택하지 않게 합니다.
+            if (event.target instanceof Element && event.target.closest("#game-tool-palette")) {
+                closeStatementContextPalette();
+                return;
+            }
             const target = findContextTargetAtPointer(event);
             if (event.button === 2) {
                 closeStatementContextPalette();
@@ -2156,8 +2200,6 @@
                 return;
             }
 
-            // 색상 팔레트는 선 선택을 유지한 채 사용해야 합니다.
-            if (event.target.closest("#game-tool-palette")) return;
             if (!target && !event.target.closest(".v2-statement-link-hit")) {
                 closeStatementContextPalette();
                 clearActiveStatementSelection();
@@ -2174,6 +2216,11 @@
             event.preventDefault();
             event.stopPropagation();
             if (contextPalette.contains(event.target)) return;
+            if (event.target instanceof Element && event.target.closest("#game-tool-palette")) {
+                closeStatementContextPalette();
+                lastPaletteRightClick = null;
+                return;
+            }
 
             const last = lastPaletteRightClick;
             const alreadyHandled = last && Date.now() - last.at < 1500
@@ -2368,8 +2415,14 @@
                 return;
             }
             if (pressedKey === 'escape' && linkRecolorPending) {
+                e.preventDefault();
                 linkRecolorPending = false;
                 refreshLinkColorPicker();
+                return;
+            }
+            if (pressedKey === 'escape' && (selectedStatementIdx !== null || selectedLineLink !== null)) {
+                e.preventDefault();
+                clearActiveStatementSelection();
                 return;
             }
 
