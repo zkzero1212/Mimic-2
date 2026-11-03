@@ -629,6 +629,20 @@ header p { display:none !important; }
   text-align: center;
 }
 #game-tool-palette .v2-mark-target-label { color: #f8dfac; }
+/* Dense formations retain a clear view of every chest and speech bubble. */
+.v2-board-stage.v2-palette-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.v2-board-stage.v2-palette-inline #game-tool-palette.v2-game-tool-palette {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  width: min(100%, 810px);
+  margin: 12px auto 10px;
+}
 @media (max-width: 1150px) {
   /* When the playfield is narrow, dock immediately below it to avoid hiding chests. */
   .v2-board-stage { display:flex; flex-direction:column; align-items:center; }
