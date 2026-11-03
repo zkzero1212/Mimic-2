@@ -1311,3 +1311,24 @@ header p { display:none !important; }
   user-select: none;
   -webkit-user-drag: none;
 }
+
+
+/* v0.08e — 4-frame native WebP board (660ms/frame).
+   Keep the established 9x9 chest grid and layer interactions unchanged.
+   Boss floors retain their separate atmosphere until their asset is approved. */
+.v2-board-stage:not(.v2-boss-floor) #chests-container {
+  background-color: #211c2b !important;
+  background-image: url("../assets/backgrounds/mimic_board_4frame_660ms.webp") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: 100% 100% !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+/* The image already contains both torches. Hide obsolete CSS-painted duplicates. */
+.v2-board-stage:not(.v2-boss-floor) #chests-container::before,
+.v2-board-stage:not(.v2-boss-floor) #chests-container::after {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+}
