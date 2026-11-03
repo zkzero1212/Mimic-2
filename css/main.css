@@ -921,3 +921,22 @@ header p { display:none !important; }
   #chests-container .v2-board-item .v2-chest-sprite:hover,
   #chests-container .v2-board-item .v2-chest-sprite:focus-visible { filter: brightness(1.15) drop-shadow(0 0 5px rgba(255,214,128,.7)); }
 }
+
+/* v0.07c — selected speech keeps the hover's soft breathing glow.
+   Selection is communicated by enlargement, without a second bright static frame. */
+#chests-container .v2-board-item .v2-speech-card.v2-link-source-selected {
+  animation: v2-speech-glow-breathe 2.4s ease-in-out infinite;
+  transform: scale(1.055) translateY(-2px);
+  transform-origin: center bottom;
+  border-color: #5c4032 !important;
+  box-shadow: 3px 4px 0 rgba(34,22,18,.55) !important;
+}
+#chests-container .v2-board-item .v2-speech-card.v2-link-source-selected:hover {
+  border-color: #ffe18a !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  #chests-container .v2-board-item .v2-speech-card.v2-link-source-selected {
+    animation: none !important;
+    filter: brightness(1.1) drop-shadow(0 0 5px rgba(255,224,148,.7));
+  }
+}
