@@ -255,7 +255,7 @@ header p { display:none !important; }
   width: 100% !important;
   min-width: 0 !important;
 }
-#chests-container > div > div {
+#chests-container > div > div > div {
   width: 100% !important;
   min-width: 0 !important;
   display: grid !important;
