@@ -1759,6 +1759,7 @@
             if (removed > 0 && window.autoSaveToCloud) window.autoSaveToCloud();
         }
 
+        const gameMapArea = container.parentElement || container;
         let lastRightClickOnStatement = null;
         // 일부 브라우저에서는 contextmenu 이벤트 전에 대상이 바뀔 수 있으므로
         // 오른쪽 마우스 버튼을 누르는 순간에도 삭제합니다.
@@ -1772,17 +1773,23 @@
             removeOutgoingStatementLinks(idx);
         }, true);
         document.addEventListener("contextmenu", event => {
+            const rect = gameMapArea.getBoundingClientRect();
+            const pointerInsideMap = event.clientX >= rect.left && event.clientX <= rect.right
+                && event.clientY >= rect.top && event.clientY <= rect.bottom;
+            // 상자·발언·연결선·빈 게임판·상단 도구를 포함해 게임 영역 전체의
+            // 브라우저 기본 우클릭 메뉴를 차단합니다. 외부 UI의 우클릭은 유지합니다.
+            if (!gameMapArea.contains(event.target) && !pointerInsideMap) return;
+            event.preventDefault();
+            event.stopPropagation();
             const last = lastRightClickOnStatement;
-            // 직전 우클릭에서 DOM을 다시 그린 경우에도 기본 브라우저 메뉴를 막습니다.
+            // 직전 우클릭에서 DOM을 다시 그린 경우에도 기본 메뉴 없이 종료합니다.
             const sameRightClick = last && Date.now() - last.at < 4000
                 && Math.abs(last.x - event.clientX) < 12
                 && Math.abs(last.y - event.clientY) < 12;
             const idx = findStatementAtPointer(event);
-            if (!sameRightClick && idx === null) return;
-            event.preventDefault();
-            event.stopPropagation();
             lastRightClickOnStatement = null;
-            if (!sameRightClick) removeOutgoingStatementLinks(idx);
+            // 발언에서 우클릭했을 때만 연결선 해제. 그 외 공간은 메뉴 차단만 합니다.
+            if (!sameRightClick && idx !== null) removeOutgoingStatementLinks(idx);
         }, true);
 
         function toggleStatementLink(from, to) {
