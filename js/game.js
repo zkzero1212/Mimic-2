@@ -1497,19 +1497,8 @@
                     bubble.classList.toggle("v2-link-source-selected", !isPreview && selectedStatementIdx === idx);
                     if (!isPreview) {
                         bubble.title = "좌클릭: 발언 선택 / 선택된 발언의 연결 대상 · 우클릭: 이 발언에서 나온 연결선 전체 해제";
-                        bubble.addEventListener("contextmenu", event => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            const before = statementLinks.length;
-                            statementLinks = statementLinks.filter(link => link[0] !== idx);
-                            if (selectedStatementIdx === idx) selectedStatementIdx = null;
-                            if (statementLinks.length !== before) {
-                                statusMsg.innerText = `${getCoord(idx, layout).name} 발언의 연결선 ${before - statementLinks.length}개를 삭제했습니다.`;
-                                statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
-                                if (window.autoSaveToCloud) window.autoSaveToCloud();
-                            }
-                            renderChests();
-                        });
+                        // 우클릭은 상위 게임판에서 처리합니다.
+                        // SVG 연결선이 발언 위를 지나가도 원래 발언 카드를 찾기 위함입니다.
                         bubble.addEventListener("click", event => {
                             event.stopPropagation();
                             if (isGameOver) return;
@@ -1740,6 +1729,62 @@
         })();
         
         // --- User Interaction ---
+        // SVG 연결선이 발언을 덮어도, 포인터 아래의 실제 발언문구를 찾습니다.
+        function findStatementAtPointer(event) {
+            const elements = document.elementsFromPoint
+                ? document.elementsFromPoint(event.clientX, event.clientY)
+                : [event.target];
+            for (const element of elements) {
+                if (!(element instanceof Element)) continue;
+                const bubble = element.closest(".v2-speech-card[data-statement-index]");
+                if (!bubble || !container.contains(bubble)) continue;
+                const idx = Number(bubble.dataset.statementIndex);
+                if (Number.isInteger(idx) && idx >= 0 && idx < chestsData.length) return idx;
+            }
+            return null;
+        }
+
+        function removeOutgoingStatementLinks(idx) {
+            const previousCount = statementLinks.length;
+            statementLinks = statementLinks.filter(([from]) => from !== idx);
+            const removed = previousCount - statementLinks.length;
+            const hadSelection = selectedStatementIdx === idx;
+            if (hadSelection) selectedStatementIdx = null;
+            if (!removed && !hadSelection) return;
+            if (removed > 0) {
+                statusMsg.innerText = `발언 ${idx + 1}의 연결선 ${removed}개를 삭제했습니다.`;
+                statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
+            }
+            renderChests();
+            if (removed > 0 && window.autoSaveToCloud) window.autoSaveToCloud();
+        }
+
+        let lastRightClickOnStatement = null;
+        // 일부 브라우저에서는 contextmenu 이벤트 전에 대상이 바뀔 수 있으므로
+        // 오른쪽 마우스 버튼을 누르는 순간에도 삭제합니다.
+        container.addEventListener("pointerdown", event => {
+            if (event.button !== 2) return;
+            const idx = findStatementAtPointer(event);
+            if (idx === null) return;
+            event.preventDefault();
+            event.stopPropagation();
+            lastRightClickOnStatement = { x: event.clientX, y: event.clientY, at: Date.now() };
+            removeOutgoingStatementLinks(idx);
+        }, true);
+        document.addEventListener("contextmenu", event => {
+            const last = lastRightClickOnStatement;
+            // 직전 우클릭에서 DOM을 다시 그린 경우에도 기본 브라우저 메뉴를 막습니다.
+            const sameRightClick = last && Date.now() - last.at < 4000
+                && Math.abs(last.x - event.clientX) < 12
+                && Math.abs(last.y - event.clientY) < 12;
+            const idx = findStatementAtPointer(event);
+            if (!sameRightClick && idx === null) return;
+            event.preventDefault();
+            event.stopPropagation();
+            lastRightClickOnStatement = null;
+            if (!sameRightClick) removeOutgoingStatementLinks(idx);
+        }, true);
+
         function toggleStatementLink(from, to) {
             if (isGameOver || from === to || !chestsData[from] || !chestsData[to]) return;
             const existing = statementLinks.findIndex(link => link[0] === from && link[1] === to);
