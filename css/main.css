@@ -331,3 +331,16 @@ header p { display:none !important; }
   min-width: 8.5rem !important;
   max-width: 8.5rem !important;
 }
+
+
+/* v0.05 — manual statement-to-chest connections */
+.v2-speech-card { cursor: crosshair; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.v2-speech-card.v2-link-source-selected {
+  border: 3px solid #ffe18a !important;
+  box-shadow: 0 0 0 3px rgba(255,225,138,.25), 3px 4px 0 rgba(34,22,18,.55) !important;
+  transform: translateY(-2px);
+}
+.v2-statement-links-layer {
+  position: absolute; inset: 0; z-index: 30; overflow: visible; pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) { .v2-speech-card { transition: none; } }
