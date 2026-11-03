@@ -390,6 +390,25 @@
             overlay.classList.remove('hidden');
         }
 
+        // v0.07h: visual progress derives from existing chest counters; no new cloud fields.
+        function updateClimbProgress() {
+            const total = Math.max(0, Number(totalTrueChests) || 0);
+            const opened = Math.max(0, Math.min(total, Number(totalOpened) || 0));
+            const pct = total ? Math.round(opened / total * 100) : 0;
+            const value = document.getElementById("ui-progress-value");
+            const bar = document.getElementById("ui-progress-bar");
+            const track = document.getElementById("ui-progress-track");
+            const state = document.getElementById("ui-floor-state");
+            if (value) value.textContent = `${opened} / ${total}`;
+            if (bar) bar.style.width = pct + "%";
+            if (track) track.setAttribute("aria-valuenow", String(pct));
+            if (state) {
+                const phase = isFloorCleared ? "cleared" : isGameOver ? "failed" : "playing";
+                state.dataset.state = phase;
+                state.textContent = phase === "cleared" ? "층 클리어" : phase === "failed" ? "탐험 실패" : "탐색 중";
+            }
+        }
+
         function updateUI(calcChests, isRandom, calcMimics, sleepCount, isBoss, treasuresSummary = {}) {
             document.getElementById('ui-floor').innerText = `${currentFloor}F`;
             document.getElementById('ui-max-floor').innerText = `${maxFloor}`;
@@ -1688,6 +1707,7 @@
                 }
                 refreshLinkColorPicker();
                 updateMarkToolbar();
+                updateClimbProgress();
             }
         }
 
