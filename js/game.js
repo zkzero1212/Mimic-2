@@ -1888,140 +1888,228 @@
         }
 
         const gameMapArea = container.parentElement || container;
-        let contextChestIndex = null;
         const contextPalette = document.getElementById("statement-context-palette");
+        let contextTarget = null; // {kind:"statement"|"chest", idx}
+        let lastPaletteRightClick = null;
 
         function closeStatementContextPalette() {
             if (!contextPalette) return;
             contextPalette.hidden = true;
-            contextChestIndex = null;
+            contextTarget = null;
+        }
+
+        function clearActiveStatementSelection() {
+            if (selectedStatementIdx === null && selectedLineLink === null) return;
+            selectedStatementIdx = null;
+            selectedLineLink = null;
+            renderChests();
+        }
+
+        // SVG 선과 겹치는 경우에도 눈에 보이는 발언/상자를 기준으로 대상 판별.
+        function findContextTargetAtPointer(event) {
+            const elements = document.elementsFromPoint
+                ? document.elementsFromPoint(event.clientX, event.clientY)
+                : [event.target];
+            for (const element of elements) {
+                if (!(element instanceof Element) || !container.contains(element)) continue;
+                const bubble = element.closest(".v2-speech-card[data-statement-index]");
+                if (bubble) {
+                    const idx = Number(bubble.dataset.statementIndex);
+                    if (Number.isInteger(idx) && idx >= 0 && idx < chestsData.length) {
+                        return {kind:"statement", idx};
+                    }
+                }
+                const chest = element.closest(".v2-chest-sprite[data-chest-index]");
+                if (chest) {
+                    const idx = Number(chest.dataset.chestIndex);
+                    if (Number.isInteger(idx) && idx >= 0 && idx < chestsData.length) {
+                        return {kind:"chest", idx};
+                    }
+                }
+            }
+            return null;
         }
 
         function updateStatementContextPalette() {
-            if (!contextPalette || contextChestIndex === null) return;
-            const chest = chestsData[contextChestIndex];
+            if (!contextPalette || !contextTarget) return;
+            const {kind, idx} = contextTarget;
+            const chest = chestsData[idx];
             if (!chest) { closeStatementContextPalette(); return; }
-            const coord = getCoord(contextChestIndex, currentGridLayout);
-            document.getElementById("context-chest-name").textContent = `${coord.name} 상자 추리 도구`;
-            const canAnnotate = !isGameOver && !chest.isOpen;
+            const coordinate = getCoord(idx, currentGridLayout);
+            document.getElementById("context-chest-name").textContent =
+                `${coordinate.name} · ${kind === "statement" ? "발언 연결선" : "상자 마킹·메모"}`;
+
+            contextPalette.querySelectorAll("[data-context-mode]").forEach(group => {
+                group.hidden = group.dataset.contextMode !== kind;
+            });
+            contextPalette.setAttribute("aria-label", kind === "statement"
+                ? "발언 연결선 색상·지우개"
+                : "상자 마킹·메모·지우개");
+
+            contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
+                const matchingLine = selectedLineLink?.[0] === idx
+                    ? statementLinks.find(link => link[0] === selectedLineLink[0] && link[1] === selectedLineLink[1])
+                    : null;
+                const currentColor = matchingLine?.[2] || selectedLinkColor;
+                button.setAttribute("aria-pressed", String(currentColor === button.dataset.contextColor));
+                button.disabled = isGameOver;
+            });
+
+            const canMark = !isGameOver && !chest.isOpen;
             contextPalette.querySelectorAll("[data-context-mark]").forEach(button => {
-                button.disabled = !canAnnotate;
-                button.setAttribute("aria-pressed", String(canAnnotate && chest.mark === button.dataset.contextMark));
+                button.disabled = !canMark;
+                button.setAttribute("aria-pressed", String(canMark && chest.mark === button.dataset.contextMark));
             });
             contextPalette.querySelectorAll("[data-context-memo]").forEach(button => {
-                button.disabled = !canAnnotate;
-                button.setAttribute("aria-pressed", String(canAnnotate && Array.isArray(chest.memo)
+                button.disabled = !canMark;
+                button.setAttribute("aria-pressed", String(canMark && Array.isArray(chest.memo)
                     && chest.memo.includes(Number(button.dataset.contextMemo))));
             });
-            contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
-                button.setAttribute("aria-pressed", String(button.dataset.contextColor === selectedLinkColor));
-            });
-            const count = statementLinks.filter(([from]) => from === contextChestIndex).length;
-            const clear = document.getElementById("context-clear-links");
-            clear.disabled = count === 0;
-            clear.textContent = count > 0
-                ? `이 발언의 연결선 삭제 (${count}개)` : "연결된 선 없음";
-            document.getElementById("context-start-link").disabled = isGameOver;
+
+            const matchingLinks = statementLinks.filter(([from]) => from === idx).length;
+            const clearLinks = document.getElementById("context-clear-links");
+            clearLinks.disabled = matchingLinks === 0;
+            clearLinks.textContent = `연결선 지우개 (${matchingLinks})`;
+            document.getElementById("context-clear-marks").disabled =
+                !canMark || (!chest.mark && (!Array.isArray(chest.memo) || chest.memo.length === 0));
         }
 
-        function openStatementContextPalette(idx, x, y) {
+        function openStatementContextPalette(kind, idx, x, y) {
             if (!contextPalette || !chestsData[idx]) return;
-            contextChestIndex = idx;
-            // 하단 도구 팔레트와 같은 상자를 대상으로 편집합니다.
-            markToolbarActiveIdx = idx;
-            updateMarkToolbar();
+            contextTarget = {kind, idx};
+            if (kind === "chest") {
+                markToolbarActiveIdx = idx;
+                updateMarkToolbar();
+            }
             updateStatementContextPalette();
             contextPalette.hidden = false;
             contextPalette.style.visibility = "hidden";
-            const w = contextPalette.offsetWidth;
-            const h = contextPalette.offsetHeight;
+            const width = contextPalette.offsetWidth;
+            const height = contextPalette.offsetHeight;
             const margin = 8;
-            const left = Math.max(margin, Math.min(x - w / 2, window.innerWidth - w - margin));
-            const above = y - h - 12;
+            const left = Math.max(margin, Math.min(x - width / 2, window.innerWidth - width - margin));
+            const above = y - height - 12;
             const top = above >= margin
                 ? above
-                : Math.max(margin, Math.min(y + 12, window.innerHeight - h - margin));
+                : Math.max(margin, Math.min(y + 12, window.innerHeight - height - margin));
             contextPalette.style.left = Math.round(left) + "px";
             contextPalette.style.top = Math.round(top) + "px";
             contextPalette.style.visibility = "";
         }
 
         document.getElementById("context-palette-close").addEventListener("click", closeStatementContextPalette);
+
+        // 발언 우클릭: 색을 고르면 그 발언을 출발점으로 선택합니다.
+        // 이미 선이 선택되어 있고 같은 발언에서 나온 선이면 그 선 하나의 색만 변경합니다.
+        contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
+            button.addEventListener("click", () => {
+                if (!contextTarget || contextTarget.kind !== "statement" || isGameOver) return;
+                const {idx} = contextTarget;
+                const color = button.dataset.contextColor;
+                if (!Object.hasOwn(LINK_COLORS, color)) return;
+                selectedLinkColor = color;
+                linkRecolorPending = false;
+                const matchingLine = selectedLineLink?.[0] === idx
+                    ? statementLinks.find(link => link[0] === selectedLineLink[0] && link[1] === selectedLineLink[1])
+                    : null;
+                if (matchingLine) {
+                    matchingLine[2] = color;
+                    selectedStatementIdx = null;
+                } else {
+                    selectedStatementIdx = idx;
+                    selectedLineLink = null;
+                }
+                refreshLinkColorPicker();
+                closeStatementContextPalette();
+                renderChests();
+                if (window.autoSaveToCloud) window.autoSaveToCloud();
+            });
+        });
+        document.getElementById("context-clear-links").addEventListener("click", () => {
+            if (!contextTarget || contextTarget.kind !== "statement") return;
+            removeOutgoingStatementLinks(contextTarget.idx);
+            closeStatementContextPalette();
+        });
+
+        // 상자 우클릭: 선택한 상자만 마킹/메모 수정 및 지우기.
         contextPalette.querySelectorAll("[data-context-mark]").forEach(button => {
             button.addEventListener("click", () => {
-                if (contextChestIndex === null || button.disabled) return;
-                toggleMark(contextChestIndex, button.dataset.contextMark);
+                if (!contextTarget || contextTarget.kind !== "chest" || button.disabled) return;
+                toggleMark(contextTarget.idx, button.dataset.contextMark);
                 updateStatementContextPalette();
             });
         });
         contextPalette.querySelectorAll("[data-context-memo]").forEach(button => {
             button.addEventListener("click", () => {
-                if (contextChestIndex === null || button.disabled) return;
-                toggleMemo(contextChestIndex, Number(button.dataset.contextMemo));
+                if (!contextTarget || contextTarget.kind !== "chest" || button.disabled) return;
+                toggleMemo(contextTarget.idx, Number(button.dataset.contextMemo));
                 updateStatementContextPalette();
             });
         });
-        contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
-            button.addEventListener("click", () => {
-                if (contextChestIndex === null) return;
-                const color = button.dataset.contextColor;
-                if (!Object.hasOwn(LINK_COLORS, color)) return;
-                selectedLinkColor = color;
-                linkRecolorPending = true;
-                refreshLinkColorPicker();
-                closeStatementContextPalette();
-                if (window.autoSaveToCloud) window.autoSaveToCloud();
-            });
-        });
-        document.getElementById("context-start-link").addEventListener("click", () => {
-            if (contextChestIndex === null || isGameOver) return;
-            selectedStatementIdx = contextChestIndex;
-            closeStatementContextPalette();
+        document.getElementById("context-clear-marks").addEventListener("click", () => {
+            if (!contextTarget || contextTarget.kind !== "chest") return;
+            const chest = chestsData[contextTarget.idx];
+            if (!chest || chest.isOpen || isGameOver) return;
+            chest.mark = null;
+            chest.memo = [];
             renderChests();
-        });
-        document.getElementById("context-clear-links").addEventListener("click", () => {
-            if (contextChestIndex === null) return;
-            removeOutgoingStatementLinks(contextChestIndex);
-            closeStatementContextPalette();
+            updateStatementContextPalette();
+            if (window.autoSaveToCloud) window.autoSaveToCloud();
         });
 
-        // 오른쪽 클릭은 발언에서만 퀵 팔레트를 열고, 그 외 게임 영역에서는 메뉴만 차단합니다.
-        // pointerdown과 contextmenu 둘 다 지원해 브라우저별 동작 차이를 줄입니다.
-        let lastPaletteRightClick = null;
-        container.addEventListener("pointerdown", event => {
-            if (event.button !== 2) return;
-            const idx = findStatementAtPointer(event);
-            if (idx === null) { closeStatementContextPalette(); return; }
-            event.preventDefault();
-            event.stopPropagation();
-            lastPaletteRightClick = { x:event.clientX, y:event.clientY, idx, at:Date.now() };
-            openStatementContextPalette(idx, event.clientX, event.clientY);
+        // 마우스가 게임판에 있을 때만 기본 브라우저 우클릭 메뉴를 차단합니다.
+        // 다른 곳을 클릭하면 출발점/선택선 강조를 해제하지만, 도구 사용 중에는 유지합니다.
+        document.addEventListener("pointerdown", event => {
+            if (event.button !== 0 && event.button !== 2) return;
+            if (contextPalette.contains(event.target)) return;
+            const target = findContextTargetAtPointer(event);
+            if (event.button === 2) {
+                closeStatementContextPalette();
+                if (target) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    lastPaletteRightClick = {x:event.clientX, y:event.clientY, at:Date.now()};
+                    openStatementContextPalette(target.kind, target.idx, event.clientX, event.clientY);
+                } else {
+                    lastPaletteRightClick = null;
+                    clearActiveStatementSelection();
+                }
+                return;
+            }
+
+            // 색상 팔레트는 선 선택을 유지한 채 사용해야 합니다.
+            if (event.target.closest("#game-tool-palette")) return;
+            if (!target && !event.target.closest(".v2-statement-link-hit")) {
+                closeStatementContextPalette();
+                clearActiveStatementSelection();
+            } else if (target || event.target.closest(".v2-statement-link-hit")) {
+                closeStatementContextPalette();
+            }
         }, true);
 
         document.addEventListener("contextmenu", event => {
             const rect = gameMapArea.getBoundingClientRect();
-            const pointerInsideMap = event.clientX >= rect.left && event.clientX <= rect.right
+            const insideRect = event.clientX >= rect.left && event.clientX <= rect.right
                 && event.clientY >= rect.top && event.clientY <= rect.bottom;
-            if (!gameMapArea.contains(event.target) && !pointerInsideMap && !contextPalette.contains(event.target)) return;
+            if (!gameMapArea.contains(event.target) && !insideRect && !contextPalette.contains(event.target)) return;
             event.preventDefault();
             event.stopPropagation();
             if (contextPalette.contains(event.target)) return;
+
             const last = lastPaletteRightClick;
-            const alreadyOpened = last && Date.now() - last.at < 1500
+            const alreadyHandled = last && Date.now() - last.at < 1500
                 && Math.abs(last.x - event.clientX) < 12
                 && Math.abs(last.y - event.clientY) < 12;
             lastPaletteRightClick = null;
-            if (alreadyOpened) return;
-            const idx = findStatementAtPointer(event);
-            if (idx !== null) openStatementContextPalette(idx, event.clientX, event.clientY);
-            else closeStatementContextPalette();
+            if (alreadyHandled) return;
+            const target = findContextTargetAtPointer(event);
+            if (target) openStatementContextPalette(target.kind, target.idx, event.clientX, event.clientY);
+            else {
+                closeStatementContextPalette();
+                clearActiveStatementSelection();
+            }
         }, true);
 
-        document.addEventListener("pointerdown", event => {
-            if (!contextPalette || contextPalette.hidden) return;
-            if (contextPalette.contains(event.target) || (event.button === 2 && container.contains(event.target))) return;
-            closeStatementContextPalette();
-        }, true);
         window.addEventListener("resize", closeStatementContextPalette);
         window.addEventListener("scroll", event => {
             if (!contextPalette.contains(event.target)) closeStatementContextPalette();
