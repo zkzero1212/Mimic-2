@@ -30,20 +30,27 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-2 items-start w-full">
             
             <!-- Left Info Panel (Climbing Stats) -->
-            <div id="left-info-panel" class="bg-white rounded-xl p-2 shadow-sm border border-slate-200 lg:col-span-1 flex flex-col gap-1.5 transition-colors duration-300 min-w-0 text-[10px]">
-                <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-tight border-b border-slate-200 pb-1 flex flex-col items-center gap-1 text-center">
+            <div id="left-info-panel" class="v2-ornate-info bg-white rounded-xl p-2 shadow-sm border border-slate-200 lg:col-span-1 flex flex-col gap-1.5 transition-colors duration-300 min-w-0 text-[10px]">
+                <h3 class="v2-info-heading text-[11px] font-bold text-slate-700 uppercase tracking-tight border-b border-slate-200 pb-1 flex flex-col items-center gap-1 text-center">
                     <span>현재 층 정보</span>
                     <!-- Build policy: v0.07a ... v0.07z, v0.07aa ... then v0.08 major. -->
-                    <span id="game-version" class="v2-build-version" title="현재 미믹 V2 개발 빌드">BUILD v0.07g</span>
+                    <span id="game-version" class="v2-build-version" title="현재 미믹 V2 개발 빌드">BUILD v0.07h</span>
                     <span class="text-[9px] font-extrabold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">최고 <span id="ui-max-floor">1</span>F</span>
                 </h3>
                 
-                <div class="flex flex-col items-center justify-center gap-1 bg-indigo-50 p-2 rounded-lg border border-indigo-100 shadow-inner w-full min-w-0">
-                    <span class="font-bold text-indigo-700 text-xs leading-tight whitespace-nowrap">현재층</span>
+                <div class="v2-floor-hero flex flex-col items-center justify-center gap-1 bg-indigo-50 p-2 rounded-lg border border-indigo-100 shadow-inner w-full min-w-0">
+                    <span class="v2-floor-overline font-bold text-indigo-700 text-xs leading-tight whitespace-nowrap">현재층</span>
                     <span id="ui-floor" class="font-extrabold text-indigo-900 text-2xl leading-none drop-shadow-sm whitespace-nowrap">1F</span>
+                    <span id="ui-floor-state" class="v2-floor-state" data-state="playing">탐색 중</span>
+                    <section class="v2-floor-progress" aria-label="진짜 보물 회수 진행도">
+                        <div class="v2-progress-heading"><span>보물 회수</span><strong id="ui-progress-value">0 / 0</strong></div>
+                        <div id="ui-progress-track" class="v2-progress-track" role="progressbar" aria-label="보물 회수율" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                            <span id="ui-progress-bar"></span>
+                        </div>
+                    </section>
                 </div>
 
-                <div class="grid grid-cols-1 gap-1 text-[10px]">
+                <div class="v2-info-stats grid grid-cols-1 gap-1 text-[10px]">
                     <div class="bg-slate-50 p-1.5 rounded flex flex-col items-center border border-slate-100">
                         <span class="text-slate-500 font-bold mb-0.5 text-[9px]">상자 수</span>
                         <span id="info-total-chests" class="font-extrabold text-slate-800 text-xs">4개</span>
@@ -62,7 +69,7 @@
                     </div>
                 </div>
                 
-                <div class="flex flex-col gap-2 text-[9px] text-slate-600 font-medium bg-slate-50 p-1.5 rounded border border-slate-100">
+                <div class="v2-info-milestones flex flex-col gap-2 text-[9px] text-slate-600 font-medium bg-slate-50 p-1.5 rounded border border-slate-100">
                     <div class="flex flex-col items-center gap-0.5">
                         <span>다음 휴식처:</span><span id="ui-next-rest" class="font-bold text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded">4층 남음</span>
                     </div>
@@ -71,11 +78,11 @@
                     </div>
                 </div>
 
-                <div class="border-t border-slate-200 pt-2 mt-1">
+                <div class="v2-info-curse-section border-t border-slate-200 pt-2 mt-1">
                     <span class="text-[9px] font-bold text-slate-700 block mb-1 text-center">활성화된 영구 저주</span>
                     <div id="ui-perm-curses" class="flex flex-wrap gap-1"></div>
                 </div>
-                <div class="border-t border-slate-200 pt-2 mt-1">
+                <div class="v2-info-segment-section border-t border-slate-200 pt-2 mt-1">
                     <span class="text-[11px] font-bold text-slate-700 block mb-1">구간 저주</span>
                     <div class="flex flex-col gap-1 text-[8px] font-extrabold text-center">
                         <span class="rounded bg-emerald-100 text-emerald-800 px-1 py-1">영구 상자 +<span id="ui-segment-chest-bonus">0</span></span>
@@ -85,7 +92,8 @@
                 
                 
 
-                <div id="ui-event-logs" class="flex flex-col gap-1 mt-1"></div>
+                <div class="v2-info-log-label">탐험 기록</div>
+                <div id="ui-event-logs" class="v2-info-logs flex flex-col gap-1 mt-1"></div>
             </div>
 
             <!-- Main board and pixel-fantasy floating palette (v0.07) -->
