@@ -85,6 +85,7 @@
                 renderChests();
                 
                 if (isGameOver) {
+                    showFloorResult(isFloorCleared);
                     if (isFloorCleared) {
                         document.getElementById('btn-next-floor').classList.remove('hidden');
                         document.getElementById('btn-restart').classList.add('hidden');
@@ -173,6 +174,7 @@
         let statementLinks = [];
         let selectedStatementIdx = null;
         let selectedLineLink = null; // [발언, 대상 상자] — 시각적 선택만 유지
+        let recentRevealIdx = null; // Animation only; not part of save state.
         let selectedLinkColor = "gold";
         // 색상 선택 직후의 다음 선 클릭 한 번만 색상 변경으로 처리합니다.
         // 기본적으로 선을 클릭하면 해당 연결 하나를 삭제합니다.
@@ -297,6 +299,7 @@
             statementLinks = [];
             selectedStatementIdx = null;
             selectedLineLink = null;
+            recentRevealIdx = null;
             currentGridLayout = null;
             baseChests = 4;
             baseMimics = 2;
@@ -468,7 +471,14 @@
                 logContainer.appendChild(div);
             });
             
+            const boardStage = document.getElementById('board-stage');
+            if (boardStage) {
+                boardStage.classList.toggle("v2-boss-floor", isBoss);
+                const plaque = boardStage.querySelector(".v2-dungeon-marquee-label");
+                if (plaque) plaque.textContent = isBoss ? "심연의 군주 · 결전" : "봉인된 보물의 방";
+            }
             let mainPanel = document.getElementById('left-info-panel');
+            if (mainPanel) mainPanel.classList.toggle("v2-boss-floor", isBoss);
             if (isBoss) {
                 mainPanel.classList.add('border-red-400', 'bg-red-50');
                 mainPanel.classList.remove('border-slate-200', 'bg-white');
@@ -491,8 +501,10 @@
             statementLinks = [];
             selectedStatementIdx = null;
             selectedLineLink = null;
+            recentRevealIdx = null;
             markToolbarActiveIdx = null;
             closeStatementContextPalette();
+            closeFloorResult();
             currentTempCurses = {};
             currentEventLogs = [];
             isLuckEvent = false;
@@ -1621,6 +1633,9 @@
                     if (isGameOver && chest.isOpen) btnChest.classList.add(displayAsMimic ? 'mimic-result-reveal' : 'treasure-result-reveal');
                     
                     btnChest.dataset.chestIndex = String(idx);
+                    if (!isPreview && chest.isOpen && recentRevealIdx === idx) {
+                        btnChest.classList.add("v2-chest-reveal-flash");
+                    }
                     if (!isPreview) btnChest.title = "좌클릭: 상자 열기 또는 선 연결 / 우클릭: 마킹·메모";
                     if (!isPreview) btnChest.onclick = () => {
                         if (selectedStatementIdx !== null) {
@@ -1705,6 +1720,7 @@
                         stage.classList.toggle("v2-palette-inline", overlaps);
                     }
                 }
+                recentRevealIdx = null; // one visual burst only, not on subsequent renders
                 refreshLinkColorPicker();
                 updateMarkToolbar();
                 updateClimbProgress();
@@ -2321,6 +2337,7 @@
                         statusMsg.className = 'text-center text-lg font-bold mb-4 h-7 text-emerald-600 drop-shadow-sm';
                     }
                 }
+                if (!isGameOver) recentRevealIdx = idx;
                 renderChests();
                 if (window.autoSaveToCloud) window.autoSaveToCloud();
                 return;
@@ -2336,6 +2353,7 @@
                     statusMsg.className = 'text-center text-lg font-bold mb-4 h-7 text-emerald-600 drop-shadow-sm';
                 }
             }
+            if (!isGameOver) recentRevealIdx = idx;
             renderChests(); if (window.autoSaveToCloud) window.autoSaveToCloud();
         }
 
@@ -2368,6 +2386,32 @@
             overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
         }
 
+        // v0.07i: Visible victory/defeat controls, without changing any floor logic.
+        const resultOverlay = document.getElementById("floor-result-overlay");
+        function closeFloorResult() {
+            if (resultOverlay) resultOverlay.hidden = true;
+        }
+        function showFloorResult(isWin) {
+            if (!resultOverlay) return;
+            resultOverlay.querySelector(".v2-floor-result-card").dataset.result = isWin ? "clear" : "mimic";
+            document.getElementById("floor-result-eyebrow").textContent =
+                isWin ? "FLOOR CLEARED" : "EXPEDITION FAILED";
+            document.getElementById("floor-result-title").textContent =
+                isWin ? `${currentFloor}F · 층 클리어` : `${currentFloor}F · 탐험 실패`;
+            document.getElementById("floor-result-description").textContent = isWin
+                ? "진짜 보물을 모두 찾았습니다. 다음 층으로 이동할 수 있습니다."
+                : "미믹에게 발각됐습니다. 공개된 정답을 확인하거나 처음부터 도전하세요.";
+            document.getElementById("floor-result-primary").textContent = isWin ? "다음 층으로" : "다시 도전";
+            resultOverlay.hidden = false;
+            document.getElementById("floor-result-primary").focus({preventScroll:true});
+        }
+        document.getElementById("floor-result-primary").addEventListener("click", () => {
+            closeFloorResult();
+            if (isFloorCleared) btnNextFloor.click();
+            else btnRestart.click();
+        });
+        document.getElementById("floor-result-review").addEventListener("click", closeFloorResult);
+
         function gameOver(isWin) {
             isGameOver = true;
             if (isWin) {
@@ -2393,7 +2437,9 @@
                 c.isSleeping = false;
                 c.isOpen = true;
             });
-            renderChests(); if(window.autoSaveToCloud) window.autoSaveToCloud();
+            renderChests();
+            showFloorResult(isWin);
+            if(window.autoSaveToCloud) window.autoSaveToCloud();
         }
 
         // Action Buttons
@@ -2443,6 +2489,14 @@
                 || focused.closest('[role="textbox"]')
             )) return;
             const pressedKey = e.key.toLowerCase();
+
+            if (resultOverlay && !resultOverlay.hidden) {
+                if (pressedKey === 'escape') {
+                    e.preventDefault();
+                    closeFloorResult();
+                }
+                return; // No gameplay hotkeys while result controls are open.
+            }
 
             if (pressedKey === 'escape' && contextPalette && !contextPalette.hidden) {
                 e.preventDefault();
