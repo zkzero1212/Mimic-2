@@ -1773,6 +1773,8 @@
                 hit.setAttribute("role", "button");
                 hit.setAttribute("aria-label", `발언 ${from + 1}에서 상자 ${to + 1}로 흰 빛이 흐르는 연결선 선택`);
                 hit.classList.add("v2-statement-link-hit");
+                hit.dataset.linkFrom = String(from);
+                hit.dataset.linkTo = String(to);
 
                 const selectLine = event => {
                     event.preventDefault();
@@ -1928,6 +1930,18 @@
             const elements = document.elementsFromPoint
                 ? document.elementsFromPoint(event.clientX, event.clientY)
                 : [event.target];
+            // 겹쳐진 말풍선/상자보다 실제 연결선의 넓은 클릭 영역을 먼저 탐색합니다.
+            for (const element of elements) {
+                if (!(element instanceof Element) || !container.contains(element)) continue;
+                const lineHit = element.closest(".v2-statement-link-hit[data-link-from][data-link-to]");
+                if (!lineHit) continue;
+                const from = Number(lineHit.dataset.linkFrom);
+                const to = Number(lineHit.dataset.linkTo);
+                if (Number.isInteger(from) && Number.isInteger(to)
+                    && statementLinks.some(link => link[0] === from && link[1] === to)) {
+                    return {kind:"line", idx:from, to};
+                }
+            }
             for (const element of elements) {
                 if (!(element instanceof Element) || !container.contains(element)) continue;
                 const bubble = element.closest(".v2-speech-card[data-statement-index]");
@@ -1954,15 +1968,16 @@
             const chest = chestsData[idx];
             if (!chest) { closeStatementContextPalette(); return; }
             const coordinate = getCoord(idx, currentGridLayout);
-            document.getElementById("context-chest-name").textContent =
-                `${coordinate.name} · ${kind === "statement" ? "발언 연결선" : "상자 마킹·메모"}`;
+            document.getElementById("context-chest-name").textContent = kind === "line"
+                ? `${coordinate.name} → ${getCoord(contextTarget.to, currentGridLayout).name} 연결선`
+                : `${coordinate.name} · ${kind === "statement" ? "발언 연결선" : "상자 마킹·메모"}`;
 
             contextPalette.querySelectorAll("[data-context-mode]").forEach(group => {
                 group.hidden = group.dataset.contextMode !== kind;
             });
-            contextPalette.setAttribute("aria-label", kind === "statement"
-                ? "발언 연결선 색상·지우개"
-                : "상자 마킹·메모·지우개");
+            contextPalette.setAttribute("aria-label", kind === "line"
+                ? "선택한 연결선 색상 즉시 변경·개별 지우개"
+                : kind === "statement" ? "발언 연결선 색상·지우개" : "상자 마킹·메모·지우개");
 
             contextPalette.querySelectorAll("[data-context-color]").forEach(button => {
                 const matchingLine = selectedLineLink?.[0] === idx
@@ -1972,6 +1987,15 @@
                 button.setAttribute("aria-pressed", String(currentColor === button.dataset.contextColor));
                 button.disabled = isGameOver;
             });
+
+            const targetLine = kind === "line"
+                ? statementLinks.find(link => link[0] === idx && link[1] === contextTarget.to)
+                : null;
+            contextPalette.querySelectorAll("[data-context-line-color]").forEach(button => {
+                button.setAttribute("aria-pressed", String(!!targetLine && targetLine[2] === button.dataset.contextLineColor));
+                button.disabled = !targetLine || isGameOver;
+            });
+            document.getElementById("context-clear-line").disabled = !targetLine;
 
             const canMark = !isGameOver && !chest.isOpen;
             contextPalette.querySelectorAll("[data-context-mark]").forEach(button => {
@@ -1992,9 +2016,15 @@
                 !canMark || (!chest.mark && (!Array.isArray(chest.memo) || chest.memo.length === 0));
         }
 
-        function openStatementContextPalette(kind, idx, x, y) {
+        function openStatementContextPalette(kind, idx, x, y, to = null) {
             if (!contextPalette || !chestsData[idx]) return;
-            contextTarget = {kind, idx};
+            if (kind === "line") {
+                if (!statementLinks.some(link => link[0] === idx && link[1] === to)) return;
+                selectedLineLink = [idx, to];
+                selectedStatementIdx = null;
+                renderChests();
+            }
+            contextTarget = {kind, idx, to};
             if (kind === "chest") {
                 markToolbarActiveIdx = idx;
                 updateMarkToolbar();
@@ -2049,6 +2079,37 @@
             closeStatementContextPalette();
         });
 
+        // 연결선 우클릭: 바로 그 선 하나를 재색칠하거나 삭제합니다.
+        contextPalette.querySelectorAll("[data-context-line-color]").forEach(button => {
+            button.addEventListener("click", () => {
+                if (!contextTarget || contextTarget.kind !== "line" || isGameOver) return;
+                const {idx:from, to} = contextTarget;
+                const link = statementLinks.find(item => item[0] === from && item[1] === to);
+                const color = button.dataset.contextLineColor;
+                if (!link || !Object.hasOwn(LINK_COLORS, color)) return;
+                link[2] = color;
+                selectedLinkColor = color;
+                selectedLineLink = [from, to];
+                selectedStatementIdx = null;
+                linkRecolorPending = false;
+                refreshLinkColorPicker();
+                closeStatementContextPalette();
+                renderChests();
+                if (window.autoSaveToCloud) window.autoSaveToCloud();
+            });
+        });
+        document.getElementById("context-clear-line").addEventListener("click", () => {
+            if (!contextTarget || contextTarget.kind !== "line") return;
+            const {idx:from, to} = contextTarget;
+            const oldCount = statementLinks.length;
+            statementLinks = statementLinks.filter(link => !(link[0] === from && link[1] === to));
+            if (statementLinks.length === oldCount) return;
+            if (selectedLineLink?.[0] === from && selectedLineLink?.[1] === to) selectedLineLink = null;
+            closeStatementContextPalette();
+            renderChests();
+            if (window.autoSaveToCloud) window.autoSaveToCloud();
+        });
+
         // 상자 우클릭: 선택한 상자만 마킹/메모 수정 및 지우기.
         contextPalette.querySelectorAll("[data-context-mark]").forEach(button => {
             button.addEventListener("click", () => {
@@ -2087,7 +2148,7 @@
                     event.preventDefault();
                     event.stopPropagation();
                     lastPaletteRightClick = {x:event.clientX, y:event.clientY, at:Date.now()};
-                    openStatementContextPalette(target.kind, target.idx, event.clientX, event.clientY);
+                    openStatementContextPalette(target.kind, target.idx, event.clientX, event.clientY, target.to);
                 } else {
                     lastPaletteRightClick = null;
                     clearActiveStatementSelection();
@@ -2121,7 +2182,7 @@
             lastPaletteRightClick = null;
             if (alreadyHandled) return;
             const target = findContextTargetAtPointer(event);
-            if (target) openStatementContextPalette(target.kind, target.idx, event.clientX, event.clientY);
+            if (target) openStatementContextPalette(target.kind, target.idx, event.clientX, event.clientY, target.to);
             else {
                 closeStatementContextPalette();
                 clearActiveStatementSelection();
