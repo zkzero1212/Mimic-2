@@ -1181,21 +1181,29 @@ header p { display:none !important; }
   100% {transform:scale(1.7);opacity:0;}
 }
 .v2-floor-result-overlay[hidden] {display:none !important;}
-/* v0.08a: Result card is a normal-flow child of the desktop right sidebar.
-   No fixed overlay, dark backdrop, or board-covering z-index. */
-#left-info-panel .v2-floor-result-overlay {
-  position: static;
-  display: block;
-  width: 100%;
-  min-width: 0;
+/* v0.08b: independent desktop top-right toast.
+   Fixed positioning never changes the dimensions of the board or sidebar. */
+#floor-result-overlay.v2-floor-result-overlay {
+  position: fixed;
+  inset: auto;
+  top: 14px;
+  right: 16px;
+  width: 310px;
+  max-width: none;
   height: auto;
-  margin: 3px 0 11px;
+  display: block;
   padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-  backdrop-filter: none;
+  margin: 0;
   box-sizing: border-box;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  border: none;
+  z-index: 300;
+  pointer-events: none;
+}
+#floor-result-overlay .v2-floor-result-card {
+  pointer-events: auto;
 }
 .v2-floor-result-card {
   box-sizing:border-box;
