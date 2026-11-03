@@ -1490,12 +1490,12 @@
                     if (isGameOver && chest.isOpen) btnChest.classList.add(displayAsMimic ? 'mimic-result-reveal' : 'treasure-result-reveal');
                     
                     btnChest.dataset.chestIndex = String(idx);
-                    if (!isPreview && !chest.isOpen) btnChest.onclick = () => {
+                    if (!isPreview) btnChest.onclick = () => {
                         if (selectedStatementIdx !== null) {
                             toggleStatementLink(selectedStatementIdx, idx);
                             return;
                         }
-                        openChest(idx);
+                        if (!chest.isOpen) openChest(idx);
                     };
                     chestWrap.appendChild(btnChest);
 
