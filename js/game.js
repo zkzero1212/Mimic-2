@@ -1496,7 +1496,7 @@
                     bubble.dataset.statementIndex = String(idx);
                     bubble.classList.toggle("v2-link-source-selected", !isPreview && selectedStatementIdx === idx);
                     if (!isPreview) {
-                        bubble.title = "좌클릭: 발언 선택 · 우클릭: 이 발언에서 나온 연결선 전체 해제";
+                        bubble.title = "좌클릭: 발언 선택 / 선택된 발언의 연결 대상 · 우클릭: 이 발언에서 나온 연결선 전체 해제";
                         bubble.addEventListener("contextmenu", event => {
                             event.preventDefault();
                             event.stopPropagation();
@@ -1513,10 +1513,16 @@
                         bubble.addEventListener("click", event => {
                             event.stopPropagation();
                             if (isGameOver) return;
+                            // 다른 발언을 선택한 상태라면 이 발언을 연결 대상으로 취급합니다.
+                            // 상자 그림을 클릭했을 때와 같은 연결 로직을 사용합니다.
+                            if (selectedStatementIdx !== null && selectedStatementIdx !== idx) {
+                                toggleStatementLink(selectedStatementIdx, idx);
+                                return;
+                            }
                             selectedStatementIdx = selectedStatementIdx === idx ? null : idx;
                             statusMsg.innerText = selectedStatementIdx === null
                                 ? "발언 선택을 해제했습니다."
-                                : `${getCoord(idx, layout).name} 발언 선택됨 — 연결할 상자를 클릭하세요.`;
+                                : `${getCoord(idx, layout).name} 발언 선택됨 — 연결할 상자 또는 발언문구를 클릭하세요.`;
                             statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
                             renderChests();
                         });
