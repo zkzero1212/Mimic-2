@@ -1647,7 +1647,25 @@
                 rowsWrapper.appendChild(rowContainer);
             }
             if (!isPreview && statementLinks.length) drawStatementLinks(rowsWrapper);
-            if (!isPreview) updateMarkToolbar();
+            if (!isPreview) {
+                // 큰 상자 배치가 하단 HUD와 겹칠 때만 팔레트를 게임판 아래로 내립니다.
+                // 판 크기와 상자 중앙정렬은 변경하지 않습니다.
+                const stage = targetContainer.closest(".v2-board-stage");
+                if (stage) {
+                    stage.classList.remove("v2-palette-inline");
+                    const palette = stage.querySelector("#game-tool-palette");
+                    if (palette) {
+                        const boardBounds = rowsWrapper.getBoundingClientRect();
+                        const paletteBounds = palette.getBoundingClientRect();
+                        const overlaps = boardBounds.left < paletteBounds.right - 6
+                            && boardBounds.right > paletteBounds.left + 6
+                            && boardBounds.top < paletteBounds.bottom - 6
+                            && boardBounds.bottom > paletteBounds.top + 6;
+                        stage.classList.toggle("v2-palette-inline", overlaps);
+                    }
+                }
+                updateMarkToolbar();
+            }
         }
 
         function drawStatementLinks(rowsWrapper) {
