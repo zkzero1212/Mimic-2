@@ -1490,40 +1490,13 @@
         }
 
         // --- Render UI ---
-        function getChestSvg(colorKey, isOpen, isMimic, treasureName) {
-            const hex = colorHex[colorKey] || '#eab308';
-            if (!isOpen) {
-                return `
-                <svg width="55" height="55" viewBox="0 0 100 100" class="drop-shadow filter hover:brightness-105 transition-all">
-                    <rect x="10" y="40" width="80" height="50" rx="5" fill="${hex}" stroke="#334155" stroke-width="4"/>
-                    <path d="M 10 40 Q 50 10 90 40 Z" fill="${hex}" stroke="#334155" stroke-width="4"/>
-                    <rect x="15" y="40" width="10" height="50" fill="#475569"/>
-                    <rect x="75" y="40" width="10" height="50" fill="#475569"/>
-                    <path d="M 15 40 Q 20 23 25 40 Z" fill="#475569"/>
-                    <path d="M 75 40 Q 80 23 85 40 Z" fill="#475569"/>
-                    <circle cx="50" cy="45" r="8" fill="#f8fafc" stroke="#334155" stroke-width="3"/>
-                    <rect x="47" y="45" width="6" height="8" fill="#334155"/>
-                </svg>`;
-            } else {
-                if (!isMimic) {
-                    return `
-                    <svg width="55" height="55" viewBox="0 0 100 100" class="chest-bounce">
-                        <path d="M 10 40 Q 50 -10 90 40 Z" fill="#475569" stroke="#334155" stroke-width="4"/>
-                        <circle cx="30" cy="40" r="10" fill="#fbbf24"/><circle cx="50" cy="35" r="12" fill="#38bdf8"/><circle cx="70" cy="40" r="10" fill="#f472b6"/>
-                        <rect x="10" y="40" width="80" height="50" rx="5" fill="${hex}" stroke="#334155" stroke-width="4"/>
-                        <rect x="15" y="40" width="10" height="50" fill="#334155" opacity="0.5"/><rect x="75" y="40" width="10" height="50" fill="#334155" opacity="0.5"/>
-                    </svg>`;
-                } else {
-                    return `
-                    <svg width="55" height="55" viewBox="0 0 100 100" class="mimic-shake">
-                        <path d="M 10 40 Q 50 -20 90 40 Z" fill="#7f1d1d" stroke="#334155" stroke-width="4"/>
-                        <polygon points="15,40 25,20 35,40" fill="#f8fafc"/><polygon points="35,40 50,15 65,40" fill="#f8fafc"/><polygon points="65,40 75,20 85,40" fill="#f8fafc"/>
-                        <circle cx="35" cy="15" r="5" fill="#ef4444" class="animate-ping"/><circle cx="65" cy="15" r="5" fill="#ef4444" class="animate-ping"/>
-                        <rect x="10" y="40" width="80" height="50" rx="5" fill="${hex}" stroke="#334155" stroke-width="4"/>
-                        <path d="M 40 40 Q 50 80 60 40 Z" fill="#ec4899"/>
-                    </svg>`;
-                }
-            }
+        // v0.07j — chest artwork is loaded only from the verified five-color sprite set.
+        const CHEST_SPRITE_COLORS = new Set(["yellow", "blue", "red", "green", "purple"]);
+        function getChestSpritePath(colorKey, isOpen, isMimic, isSleeping) {
+            const color = CHEST_SPRITE_COLORS.has(colorKey) ? colorKey : "yellow";
+            const state = isOpen ? (isMimic ? "mimic" : "open")
+                : (isSleeping ? "sleeping" : "closed");
+            return `assets/chests/chest_${color}_${state}.png`;
         }
 
         function renderChests(targetContainer = container, boardData = chestsData, isPreview = false) {
@@ -1619,17 +1592,26 @@
                     }
 
                     const displayAsMimic = chest.role === 'M' || chest.isTricksterMimickingMimic;
-                    let openedBgClass = 'bg-slate-100';
-                    if (chest.isOpen) {
-                        if (displayAsMimic) openedBgClass = 'bg-red-100';
-                        else if (chest.isTrickster || chest.treasure === '흉내쟁이') openedBgClass = 'bg-violet-100';
-                        else { const tCol = (isRandomMode && !isGameOver) ? null : treasureColorMap[chest.treasure]; openedBgClass = tCol ? tCol.bg : 'bg-emerald-100'; }
-                    }
-
+                    // Keep the original clickable button, coordinate and annotation logic intact.
                     const btnChest = document.createElement('button');
-                    btnChest.className = `v2-chest-sprite relative flex items-center justify-center rounded-xl p-1 transition-all duration-300 ${chest.isOpen ? 'cursor-default' : 'hover:-translate-y-1.5 cursor-pointer'} ${openedBgClass} ${!chest.isOpen ? 'border border-slate-200' : ''}`;
-                    if (!chest.isOpen && boxShadows.length > 0) btnChest.setAttribute("style", `box-shadow: ${boxShadows.join(', ')};`);
-                    btnChest.innerHTML = getChestSvg(chest.color, chest.isOpen, displayAsMimic, displayAsMimic ? '미믹 (꽝)' : chest.treasure);
+                    btnChest.type = "button";
+                    btnChest.className = `v2-chest-sprite relative flex items-center justify-center transition-all duration-300 ${chest.isOpen ? 'cursor-default' : 'hover:-translate-y-1.5 cursor-pointer'}`;
+                    if (!chest.isOpen && boxShadows.length > 0) {
+                        btnChest.style.boxShadow = boxShadows.join(", ");
+                    }
+                    const sprite = document.createElement("img");
+                    sprite.src = getChestSpritePath(chest.color, chest.isOpen, displayAsMimic, chest.isSleeping);
+                    sprite.className = `v2-chest-pixel-art ${chest.isOpen ? (displayAsMimic ? "mimic-shake" : "chest-bounce") : ""}`;
+                    sprite.alt = "";
+                    sprite.width = 64;
+                    sprite.height = 64;
+                    sprite.decoding = "async";
+                    sprite.draggable = false;
+                    btnChest.appendChild(sprite);
+                    const chestColorName = {yellow:"노란색",blue:"파란색",red:"빨간색",green:"초록색",purple:"보라색"}[chest.color] || "노란색";
+                    const chestStateName = chest.isOpen ? (displayAsMimic ? "미믹" : "열린 상자")
+                        : (chest.isSleeping ? "잠자는 상자" : "닫힌 상자");
+                    btnChest.setAttribute("aria-label", `${coord.name} ${chestColorName} ${chestStateName}`);
                     if (isGameOver && chest.isOpen) btnChest.classList.add(displayAsMimic ? 'mimic-result-reveal' : 'treasure-result-reveal');
                     
                     btnChest.dataset.chestIndex = String(idx);
