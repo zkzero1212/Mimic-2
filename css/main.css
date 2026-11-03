@@ -1187,7 +1187,9 @@ header p { display:none !important; }
   position: fixed;
   inset: auto;
   top: 14px;
-  right: 16px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   width: 310px;
   max-width: none;
   height: auto;
@@ -1221,7 +1223,7 @@ header p { display:none !important; }
   text-align:center;
   background:radial-gradient(ellipse at 50% 7%,rgba(253,186,93,.24),transparent 53%),repeating-linear-gradient(0deg,rgba(255,236,187,.027) 0 2px,transparent 2px 8px),linear-gradient(145deg,#634039,#35232b 65%,#211b26);
   box-shadow:inset 0 0 0 2px #251921,inset 0 0 0 4px #8e6045,0 3px 0 #171218,0 7px 13px rgba(0,0,0,.35);
-  animation:v2-floor-result-enter .25s ease-out both;
+  animation:v2-floor-result-enter .32s ease-out both;
 }
 .v2-floor-result-card::before,.v2-floor-result-card::after {
   content:"✦";position:absolute;top:10px;color:#b88957;font-size:18px;
@@ -1257,8 +1259,13 @@ header p { display:none !important; }
 .v2-floor-result-card[data-result="mimic"] .v2-result-emblem {color:#ff9994;text-shadow:0 0 16px rgba(246,76,69,.64);}
 .v2-floor-result-card[data-result="mimic"] .v2-result-eyebrow {color:#ffaea5;}
 .v2-floor-result-card[data-result="mimic"] #floor-result-primary {background:linear-gradient(#a76159,#693638);border-color:#e19e8b;color:#fff2e4;}
+/* Entry and exit use exactly the same frames and duration, reversed on close. */
+#floor-result-overlay.is-closing .v2-floor-result-card {
+  animation: v2-floor-result-enter .32s ease-in reverse both;
+  pointer-events: none;
+}
 @keyframes v2-floor-result-enter {
-  from {opacity:0;transform:translateY(16px) scale(.97);}
+  from {opacity:0;transform:translateY(12px) scale(.98);}
   to {opacity:1;transform:translateY(0) scale(1);}
 }
 @media(prefers-reduced-motion:reduce) {
