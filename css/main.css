@@ -940,3 +940,10 @@ header p { display:none !important; }
     filter: brightness(1.1) drop-shadow(0 0 5px rgba(255,224,148,.7));
   }
 }
+
+/* v0.07e — keep floating context menus usable at the visible viewport edges. */
+.v2-statement-context-palette {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #bc8a61 #35242a;
+}
