@@ -127,22 +127,6 @@
             <!-- Right Control Panel -->
             <div id="right-control-panel" class="bg-white rounded-xl p-1.5 shadow-sm border border-slate-200 lg:col-span-1 flex flex-col gap-1.5 min-w-0 text-[10px]">
                 
-                <div class="mb-2 bg-slate-50 p-1.5 rounded-lg border border-slate-200 shadow-sm relative">
-                    <h4 class="text-[9px] font-extrabold text-slate-600 mb-1.5 flex flex-col items-center gap-1 text-center">
-                        <span class="flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
-                            클라우드 세이브 슬롯 (자동 저장)
-                        </span>
-                        <span id="save-indicator" class="text-[8px] text-emerald-600 font-extrabold opacity-0 transition-opacity duration-300 drop-shadow-sm bg-emerald-100 px-1 rounded">💾 자동 저장됨</span>
-                    </h4>
-                    
-                    <div class="flex flex-col gap-1">
-                        <button id="slot-Mimic1" onclick="selectSlot('Mimic1')" class="flex-1 bg-indigo-600 text-white ring-2 ring-indigo-300 font-extrabold py-2 px-1 rounded text-[11px] shadow-sm transition-all">Mimic1</button>
-                        <button id="slot-Mimic2" onclick="selectSlot('Mimic2')" class="flex-1 bg-white hover:bg-indigo-50 text-slate-600 border border-slate-300 font-extrabold py-2 px-1 rounded text-[11px] shadow-sm transition-all">Mimic2</button>
-                        <button id="slot-Mimic3" onclick="selectSlot('Mimic3')" class="flex-1 bg-white hover:bg-indigo-50 text-slate-600 border border-slate-300 font-extrabold py-2 px-1 rounded text-[11px] shadow-sm transition-all">Mimic3</button>
-                    </div>
-                    <p class="text-[8px] text-slate-500 mt-1.5 leading-tight text-center break-keep">모든 진행 상황이 <b>실시간으로 자동 저장</b>됩니다.</p>
-                </div>
                 <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-1.5">진행 및 액션</h3>
                 
                 <button id="btn-next-floor" class="hidden w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold py-3 px-4 rounded-lg shadow-md transition-all text-sm mb-2 animate-bounce">
@@ -161,13 +145,7 @@
                     </button>
                 </div>
 
-                <div class="border-t border-slate-100 pt-2 mt-2 text-[11px] text-slate-700 leading-relaxed">
-                    <b class="text-slate-900 block mb-1">단축키 안내:</b>
-                    • 마우스 올리고 <code class="bg-slate-100 px-1 rounded font-bold text-slate-900">Q</code>/<code class="bg-slate-100 px-1 rounded font-bold text-slate-900">W</code>/<code class="bg-slate-100 px-1 rounded font-bold text-slate-900">E</code> : ⭕/❌/❓<br>
-                    • 마우스 올리고 <code class="bg-slate-100 px-1 rounded font-bold text-slate-900">1~5</code> : 메모 숫자<br>
-                    • <code class="bg-slate-100 px-1 rounded font-bold text-slate-900">C</code> 빠르게 2회 : X 제외 모두 열기<br>
-                    • <code class="bg-slate-100 px-1 rounded font-bold text-slate-900">R</code> : 게임오버 시 재시작 / 클리어 시 다음 층
-                </div>
+
             </div>
 
         </div>
