@@ -220,3 +220,25 @@ header p { color: #d6c1a5 !important; font-family: monospace; }
   #right-control-panel { grid-column: 1 !important; grid-row: 3 !important; }
   #chests-container { min-height: 380px !important; }
 }
+
+
+/* v0.03 — fixed 9×9 playfield and minimal chrome */
+#status-message, #gen-warning { display:none !important; }
+body > div:first-of-type { max-width: 1720px !important; }
+header p { display:none !important; }
+#chests-container {
+  width: min(100%, 900px) !important;
+  max-width: 900px !important;
+  aspect-ratio: 1 / 1;
+  height: auto !important;
+  min-height: 0 !important;
+  box-sizing: border-box;
+  justify-content: center;
+  align-content: center;
+  overflow: auto !important;
+  padding: 5% !important;
+  background-size: calc(100% / 9) calc(100% / 9), calc(100% / 9) calc(100% / 9), 100% 100% !important;
+}
+#chests-container > div { min-height: 100%; justify-content: center; }
+#chests-container > div > div { justify-content: center; }
+#right-control-panel { display:none !important; }
