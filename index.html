@@ -92,6 +92,15 @@
                 <div id="info-treasures-list" class="flex flex-wrap justify-center items-center gap-2 md:gap-4 mb-4 bg-white px-3 py-2.5 rounded-xl shadow-sm border border-slate-200 w-full min-h-[48px]">
                 </div>
                 
+                <!-- v0.05: 발언-상자 연결선 색상 팔레트 -->
+                <div id="link-color-picker" class="v2-link-color-picker" role="group" aria-label="연결선 색상 선택">
+                    <span class="v2-link-color-title">연결선 색상</span>
+                    <button type="button" class="v2-link-color-option is-active" data-link-color="gold" aria-label="금색 연결선" aria-pressed="true" style="--link-swatch:#ffe18a"><span class="v2-link-color-dot" aria-hidden="true"></span>금색</button>
+                    <button type="button" class="v2-link-color-option" data-link-color="mint" aria-label="민트색 연결선" aria-pressed="false" style="--link-swatch:#5eead4"><span class="v2-link-color-dot" aria-hidden="true"></span>민트</button>
+                    <button type="button" class="v2-link-color-option" data-link-color="violet" aria-label="보라색 연결선" aria-pressed="false" style="--link-swatch:#c4b5fd"><span class="v2-link-color-dot" aria-hidden="true"></span>보라</button>
+                    <button type="button" class="v2-link-color-option" data-link-color="coral" aria-label="분홍색 연결선" aria-pressed="false" style="--link-swatch:#fb7185"><span class="v2-link-color-dot" aria-hidden="true"></span>분홍</button>
+                </div>
+                
                 <div id="chests-container" class="flex flex-col gap-4 items-center mx-auto mb-6 pt-5 w-full min-w-0 overflow-visible transition-all duration-300">
                     <!-- Chests rendered here -->
                 </div>
