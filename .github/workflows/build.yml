@@ -1,0 +1,44 @@
+name: Build V2
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Validate static game
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check required files
+        run: |
+          test -f index.html
+          test -f css/main.css
+          test -f js/game.js
+          test -f js/firebase.js
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check js/game.js
+          node --input-type=module --check < js/firebase.js
+
+      - name: Check local asset references
+        run: |
+          grep -Fq 'href="css/main.css"' index.html
+          grep -Fq 'src="js/firebase.js"' index.html
+          grep -Fq 'src="js/game.js"' index.html
