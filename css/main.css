@@ -958,3 +958,132 @@ header p { display:none !important; }
   font: 10px/1.5 'Pretendard', monospace;
   letter-spacing: .02em;
 }
+
+/* === v0.07g : Stone-dungeon playfield, without changing the 9x9 grid metrics. === */
+.v2-board-stage {
+  --dungeon-gold: #d8aa6d;
+  --dungeon-ink: #1c1921;
+}
+.v2-dungeon-marquee {
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  max-width:calc(100% - 30px);
+  min-height:46px;
+  padding:6px 22px;
+  margin:0 auto -3px;
+  box-sizing:border-box;
+  border:3px solid #9a6647;
+  border-bottom-color:#302229;
+  border-radius:3px 3px 0 0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,221,155,.025) 0 2px,transparent 2px 11px),
+    linear-gradient(#503632,#291f28 70%,#201a23);
+  box-shadow:inset 0 2px 0 #b38457,inset 0 0 0 2px #211921,0 4px 0 #1d161c;
+  color:#ffdf9e;
+  font:900 13px/1.2 'Pretendard',monospace;
+  letter-spacing:.17em;
+  text-shadow:1px 2px 0 #151218,0 0 10px rgba(255,190,95,.22);
+}
+.v2-dungeon-symbol {
+  color:#efbd76;
+  font-size:14px;
+  text-shadow:0 0 9px rgba(255,191,101,.65);
+}
+#chests-container {
+  position:relative;
+  isolation:isolate;
+  box-sizing:border-box;
+  background-color:#38363d !important;
+  background-image:
+    radial-gradient(ellipse at 50% 6%,rgba(239,178,93,.27) 0,rgba(212,131,72,.09) 24%,transparent 58%),
+    radial-gradient(ellipse at 5% 22%,rgba(247,151,63,.10),transparent 32%),
+    radial-gradient(ellipse at 95% 22%,rgba(247,151,63,.10),transparent 32%),
+    repeating-linear-gradient(0deg,transparent 0 38px,rgba(17,17,26,.56) 38px 41px,transparent 41px 78px),
+    repeating-linear-gradient(90deg,transparent 0 43px,rgba(13,13,24,.35) 43px 46px,transparent 46px 86px),
+    linear-gradient(145deg,#52474a,#34343b 50%,#292b33 100%) !important;
+  background-size:auto,auto,auto,auto,auto,auto !important;
+  border:4px solid #98704d !important;
+  border-radius:2px !important;
+  box-shadow:
+    inset 0 0 0 3px #201a23,
+    inset 0 0 0 7px #6d5045,
+    inset 0 0 42px rgba(0,0,0,.40),
+    0 6px 0 #18141b,
+    0 13px 24px rgba(9,7,13,.4) !important;
+}
+/* Torch sconces are purely decorative: no DOM nodes, no pointer capture. */
+#chests-container::before,#chests-container::after {
+  content:"";
+  position:absolute;
+  z-index:2;
+  pointer-events:none;
+  top:17px;
+  width:19px;
+  height:37px;
+  border:2px solid #382725;
+  border-radius:4px 4px 8px 8px;
+  background:
+    radial-gradient(ellipse at 50% 24%,#fff6cd 0 12%,#ffd065 17%,#ed702c 43%,transparent 55%),
+    linear-gradient(90deg,#43393b 0 25%,#c49a64 25% 75%,#30252d 75%);
+  box-shadow:0 0 13px 4px rgba(240,133,52,.48),0 0 26px 6px rgba(224,123,48,.14);
+  animation:v2-torch-flicker 2.7s ease-in-out infinite alternate;
+}
+#chests-container::before { left:13px; }
+#chests-container::after { right:13px; animation-delay:-1.1s; }
+@keyframes v2-torch-flicker {
+  0%,100% { filter:brightness(.9); box-shadow:0 0 11px 3px rgba(241,122,47,.38); }
+  48% { filter:brightness(1.17); box-shadow:0 0 17px 6px rgba(246,155,66,.52); }
+  75% { filter:brightness(.96); box-shadow:0 0 13px 4px rgba(236,129,49,.44); }
+}
+/* Slightly aged clue paper; hover/selected glow rules from prior builds stay intact. */
+#chests-container .v2-board-item .v2-speech-card {
+  background:
+    repeating-linear-gradient(0deg,rgba(136,92,52,.04) 0 2px,transparent 2px 6px),
+    linear-gradient(148deg,#fff0cb,#e6cf9e) !important;
+  color:#37251f !important;
+  border-color:#6b4738 !important;
+  text-shadow:0 1px rgba(255,255,255,.22);
+}
+#chests-container .v2-board-item .v2-speech-card::after {
+  border-top-color:#e8d1a1 !important;
+}
+#chests-container .v2-board-item .v2-chest-sprite {
+  background:linear-gradient(160deg,#755442,#392a2c) !important;
+  border:2px solid #a1754e !important;
+  border-radius:3px !important;
+  box-shadow:inset 1px 1px rgba(255,220,154,.23),inset -2px -2px #281e24;
+}
+#chests-container .v2-board-item .v2-chest-sprite::before {
+  content:"";
+  position:absolute;
+  top:2px;left:3px;right:3px;
+  height:3px;
+  border-radius:1px;
+  background:linear-gradient(90deg,transparent,#d2a56e,transparent);
+  opacity:.73;
+  pointer-events:none;
+}
+#info-treasures-list {
+  background:linear-gradient(180deg,#4a3330,#29232c) !important;
+  border:3px solid #a4754f !important;
+  box-shadow:inset 0 0 0 2px #251d22,0 4px 0 rgba(25,18,22,.65);
+}
+#info-treasures-list > div {
+  background:linear-gradient(180deg,#684436,#3d2e2c) !important;
+  border:1px solid #976c4b !important;
+  border-radius:3px !important;
+  box-shadow:inset 0 1px 0 rgba(255,224,173,.16),0 2px 0 #211a20;
+}
+@media(max-width:690px) {
+  .v2-dungeon-marquee { gap:9px; font-size:11px; min-height:40px; padding:5px 10px; }
+  #chests-container::before,#chests-container::after { width:13px;height:28px;top:10px; }
+  #chests-container::before { left:4px; }
+  #chests-container::after { right:4px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  #chests-container::before,#chests-container::after { animation:none !important; }
+}
