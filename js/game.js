@@ -1,7 +1,7 @@
 // --- Cloud Sync Bridge ---
         window.getGameState = () => {
             return {
-                currentFloor, maxFloor, permCurses, eventState,
+                currentFloor, maxFloor, permCurses, eventState, statementLinks,
                 bossRewardRulesVersion: 3,
                 segmentChestBonus, segmentMimicBonus, bossRewardsClaimedFloors,
                 chestsData, currentGridLayout, totalOpened, totalTrueChests, isGameOver, isFloorCleared,
@@ -11,6 +11,8 @@
         };
 
         window.loadGameState = (data) => {
+            statementLinks = Array.isArray(data.statementLinks) ? data.statementLinks.filter(link => Array.isArray(link) && link.length === 2 && link.every(Number.isInteger)) : [];
+            selectedStatementIdx = null;
             currentFloor = Math.max(1, Number(data.currentFloor) || 1);
             maxFloor = Math.max(1, Number(data.maxFloor) || 1);
             permCurses = data.permCurses || { random: false, sleepLevel: 0, addChests: 0, addMimics: 0 };
@@ -145,6 +147,8 @@
         let totalOpened = 0;
         let totalTrueChests = 0;
         let hoveredChestIdx = null;
+        let statementLinks = [];
+        let selectedStatementIdx = null;
 
         const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
         const colorHex = { red: '#ef4444', blue: '#3b82f6', green: '#22c55e', yellow: '#eab308', purple: '#a855f7' };
@@ -192,6 +196,8 @@
         // --- Core Climbing System ---
         function startClimb() {
             currentFloor = 1;
+            statementLinks = [];
+            selectedStatementIdx = null;
             currentGridLayout = null;
             baseChests = 4;
             baseMimics = 2;
@@ -364,6 +370,8 @@
         function initFloor() {
             isGameOver = false;
             isFloorCleared = false;
+            statementLinks = [];
+            selectedStatementIdx = null;
             currentTempCurses = {};
             currentEventLogs = [];
             isLuckEvent = false;
@@ -1437,6 +1445,21 @@
                     if (chest.isSleeping) bubble.innerHTML = `<span class="text-xl font-bold tracking-widest text-slate-400 animate-pulse">zzZ</span>`;
                     else bubble.innerHTML = `<span>${chest.statement}</span>`;
                     
+                    bubble.dataset.statementIndex = String(idx);
+                    bubble.classList.toggle("v2-link-source-selected", !isPreview && selectedStatementIdx === idx);
+                    if (!isPreview) {
+                        bubble.title = "클릭하여 발언을 선택한 뒤 연결할 상자를 클릭하세요.";
+                        bubble.addEventListener("click", event => {
+                            event.stopPropagation();
+                            if (isGameOver) return;
+                            selectedStatementIdx = selectedStatementIdx === idx ? null : idx;
+                            statusMsg.innerText = selectedStatementIdx === null
+                                ? "발언 선택을 해제했습니다."
+                                : `${getCoord(idx, layout).name} 발언 선택됨 — 연결할 상자를 클릭하세요.`;
+                            statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
+                            renderChests();
+                        });
+                    }
                     chestWrap.appendChild(bubble);
 
                     let boxShadows = [];
@@ -1465,7 +1488,14 @@
                     btnChest.innerHTML = getChestSvg(chest.color, chest.isOpen, displayAsMimic, displayAsMimic ? '미믹 (꽝)' : chest.treasure);
                     if (isGameOver && chest.isOpen) btnChest.classList.add(displayAsMimic ? 'mimic-result-reveal' : 'treasure-result-reveal');
                     
-                    if (!isPreview && !chest.isOpen) btnChest.onclick = () => openChest(idx);
+                    btnChest.dataset.chestIndex = String(idx);
+                    if (!isPreview && !chest.isOpen) btnChest.onclick = () => {
+                        if (selectedStatementIdx !== null) {
+                            toggleStatementLink(selectedStatementIdx, idx);
+                            return;
+                        }
+                        openChest(idx);
+                    };
                     chestWrap.appendChild(btnChest);
 
                     const actionWrap = document.createElement('div'); actionWrap.className = "mt-1 w-full h-[18px] flex items-center justify-center";
@@ -1501,6 +1531,42 @@
                 }
                 rowsWrapper.appendChild(rowContainer);
             }
+            if (!isPreview && statementLinks.length) drawStatementLinks(rowsWrapper);
+        }
+
+        function drawStatementLinks(rowsWrapper) {
+            const svgNS = "http://www.w3.org/2000/svg";
+            const wrapperRect = rowsWrapper.getBoundingClientRect();
+            const width = Math.max(rowsWrapper.scrollWidth, rowsWrapper.offsetWidth);
+            const height = Math.max(rowsWrapper.scrollHeight, rowsWrapper.offsetHeight);
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            svg.setAttribute("width", String(width));
+            svg.setAttribute("height", String(height));
+            svg.setAttribute("aria-hidden", "true");
+            svg.classList.add("v2-statement-links-layer");
+            statementLinks.forEach(([from, to]) => {
+                const source = rowsWrapper.querySelector(`.v2-speech-card[data-statement-index="${from}"]`);
+                const target = rowsWrapper.querySelector(`.v2-chest-sprite[data-chest-index="${to}"]`);
+                if (!source || !target) return;
+                const a = source.getBoundingClientRect();
+                const b = target.getBoundingClientRect();
+                const x1 = a.left + a.width / 2 - wrapperRect.left;
+                const y1 = a.bottom - wrapperRect.top;
+                const x2 = b.left + b.width / 2 - wrapperRect.left;
+                const y2 = b.top - wrapperRect.top;
+                const bend = Math.max(24, Math.abs(y2 - y1) * 0.45);
+                const path = document.createElementNS(svgNS, "path");
+                path.setAttribute("d", `M ${x1} ${y1} C ${x1} ${y1 + bend}, ${x2} ${y2 - bend}, ${x2} ${y2}`);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", "#ffe18a");
+                path.setAttribute("stroke-width", "3");
+                path.setAttribute("stroke-linecap", "round");
+                path.setAttribute("stroke-dasharray", "7 5");
+                path.setAttribute("filter", "drop-shadow(1px 2px 1px rgba(20,12,8,.8))");
+                svg.appendChild(path);
+            });
+            rowsWrapper.appendChild(svg);
         }
 
         // DEBUG CHEST LAYOUT PREVIEW: remove this isolated block to roll back the feature.
@@ -1567,6 +1633,18 @@
         })();
         
         // --- User Interaction ---
+        function toggleStatementLink(from, to) {
+            if (isGameOver || from === to || !chestsData[from] || !chestsData[to]) return;
+            const existing = statementLinks.findIndex(link => link[0] === from && link[1] === to);
+            if (existing >= 0) statementLinks.splice(existing, 1);
+            else statementLinks.push([from, to]);
+            selectedStatementIdx = null;
+            statusMsg.innerText = existing >= 0 ? "발언-상자 연결을 해제했습니다." : "발언과 상자를 연결했습니다.";
+            statusMsg.className = "text-center text-sm font-bold mb-3 h-6 text-amber-300 drop-shadow-sm";
+            renderChests();
+            if (window.autoSaveToCloud) window.autoSaveToCloud();
+        }
+
         function toggleMark(idx, markType) { if (isGameOver || chestsData[idx].isOpen) return; chestsData[idx].mark = (chestsData[idx].mark === markType) ? null : markType; renderChests(); if(window.autoSaveToCloud) window.autoSaveToCloud(); }
         function toggleMemo(idx, num) {
             if (isGameOver || chestsData[idx].isOpen) return;
