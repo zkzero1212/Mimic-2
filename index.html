@@ -92,7 +92,7 @@
         header { display:none !important; }
         #status-message { color:#f4d58a !important; font-family:monospace; text-shadow:2px 2px #241a18; margin:0 auto 12px !important; }
         #gen-warning { color:#ffca72 !important; }
-        .grid.grid-cols-1.lg\\:grid-cols-12 { display:grid !important; grid-template-columns:minmax(0,1fr) 280px !important; gap:14px !important; align-items:stretch !important; }
+        .grid.grid-cols-1.lg\:grid-cols-12 { display:grid !important; grid-template-columns:minmax(0,1fr) 280px !important; gap:14px !important; align-items:stretch !important; }
         #left-info-panel { grid-column:2 !important; grid-row:1 !important; width:100%; background:linear-gradient(180deg,#492a27,#281b1d) !important; border:4px solid #986044 !important; border-radius:3px !important; color:#f4e5c7 !important; padding:14px !important; font-family:monospace; font-size:12px !important; box-shadow:inset 0 0 0 2px #1c1718, 0 5px 0 #17191e !important; }
         #left-info-panel h3, #left-info-panel span, #left-info-panel div { color:inherit; }
         #left-info-panel h3 { font-size:16px !important; color:#f5d99d !important; border-color:#986044 !important; }
@@ -108,7 +108,7 @@
         #left-info-panel > div:nth-of-type(3) > div { min-height:58px; }
         #left-info-panel > div:nth-of-type(4) { font-size:11px !important; }
         #left-info-panel > div:nth-of-type(5), #left-info-panel > div:nth-of-type(6) { border-color:#80503d !important; }
-        .lg\\:col-span-10 { grid-column:1 !important; grid-row:1 !important; min-width:0; padding:12px 14px 18px; background:#8b5545; border:5px solid #a97854; box-shadow:inset 0 0 0 3px #422c2b, 0 7px 0 #17191e; }
+        .lg\:col-span-10 { grid-column:1 !important; grid-row:1 !important; min-width:0; padding:12px 14px 18px; background:#8b5545; border:5px solid #a97854; box-shadow:inset 0 0 0 3px #422c2b, 0 7px 0 #17191e; }
         #info-treasures-list { background:#4a302d !important; border:2px solid #a97854 !important; border-radius:2px !important; color:#f7e3bd !important; }
         #info-treasures-list * { color:#f7e3bd !important; }
         #chests-container { background-color:#a96f58; background-image:linear-gradient(rgba(255,220,176,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,220,176,.08) 1px,transparent 1px); background-size:32px 32px; border:3px solid #734b40; padding:24px 12px 30px !important; min-height:440px; }
@@ -127,9 +127,9 @@
         #rest-area-overlay > div { border-radius:3px !important; }
         @media(max-width:900px) {
           body > div:first-of-type { padding:10px !important; }
-          .grid.grid-cols-1.lg\\:grid-cols-12 { grid-template-columns:1fr !important; }
+          .grid.grid-cols-1.lg\:grid-cols-12 { grid-template-columns:1fr !important; }
           #left-info-panel { grid-column:1 !important; grid-row:2 !important; }
-          .lg\\:col-span-10 { grid-column:1 !important; grid-row:1 !important; }
+          .lg\:col-span-10 { grid-column:1 !important; grid-row:1 !important; }
           #right-control-panel { grid-row:3 !important; grid-template-columns:1fr !important; }
           #chests-container { min-height:360px; }
         }
@@ -477,7 +477,7 @@
         
         // --- Game State ---
         let currentFloor = 1;
-        let maxFloor = localStorage.getItem('mimicMaxFloor') || 1;
+        let maxFloor = localStorage.getItem('mimic2MaxFloor') || 1;
 
         let baseChests = 4;
         let baseMimics = 2;
@@ -669,7 +669,7 @@
                     currentFloor++;
                     if (currentFloor > maxFloor) {
                         maxFloor = currentFloor;
-                        localStorage.setItem('mimicMaxFloor', maxFloor);
+                        localStorage.setItem('mimic2MaxFloor', maxFloor);
                     }
                     initFloor();
                 };
@@ -1929,7 +1929,7 @@
                 const targetFloor = Math.max(1, Math.min(999, Math.floor(Number(floorInput.value) || 1)));
                 currentFloor = targetFloor;
                 if (currentFloor > maxFloor) maxFloor = currentFloor;
-                localStorage.setItem('mimicMaxFloor', maxFloor);
+                localStorage.setItem('mimic2MaxFloor', maxFloor);
                 restVisitedForCurrentFloor = currentFloor % 5 === 0;
                 const restOverlay = document.getElementById('rest-area-overlay');
                 if (restOverlay) restOverlay.classList.add('hidden');
@@ -2066,7 +2066,7 @@
         btnNextFloor.addEventListener('click', () => {
             if (isFloorCleared) {
                 currentFloor++;
-                if (currentFloor > maxFloor) { maxFloor = currentFloor; localStorage.setItem('mimicMaxFloor', maxFloor); }
+                if (currentFloor > maxFloor) { maxFloor = currentFloor; localStorage.setItem('mimic2MaxFloor', maxFloor); }
                 initFloor();
             }
         });
