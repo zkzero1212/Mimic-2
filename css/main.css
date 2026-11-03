@@ -1087,3 +1087,59 @@ header p { display:none !important; }
 @media(prefers-reduced-motion:reduce) {
   #chests-container::before,#chests-container::after { animation:none !important; }
 }
+
+/* === v0.07h — fantasy expedition ledger === */
+#left-info-panel.v2-ornate-info {
+  background:linear-gradient(90deg,rgba(229,171,97,.12) 0 3px,transparent 3px calc(100% - 3px),rgba(229,171,97,.12) calc(100% - 3px)),linear-gradient(180deg,#583731,#2e2227 28%,#201c26) !important;
+  border:4px solid #ba8755 !important;
+  padding:16px 12px 18px !important;
+  gap:7px !important;
+  box-shadow:inset 0 0 0 3px #291b20,inset 0 0 0 6px #654239,0 6px 0 #1a161b,0 15px 25px rgba(0,0,0,.22) !important;
+}
+#left-info-panel .v2-info-heading {
+  padding:8px 0 12px !important;
+  margin-bottom:4px !important;
+  font:900 16px/1.3 'Pretendard',monospace !important;
+  color:#ffe0a6 !important;
+  border-bottom:3px double #a87b4b !important;
+}
+#left-info-panel .v2-floor-hero {
+  background:radial-gradient(ellipse at 50% 0,rgba(249,184,81,.14),transparent 70%),linear-gradient(#45322f,#2a232b) !important;
+  border:2px solid #906c48 !important;
+  border-radius:3px !important;
+  padding:14px 10px 12px !important;
+  box-shadow:inset 0 0 0 2px #241b23,inset 0 5px 13px rgba(0,0,0,.25) !important;
+}
+#left-info-panel .v2-floor-overline {font:800 11px 'Pretendard',monospace;color:#d4b48c !important;letter-spacing:.18em;}
+#left-info-panel #ui-floor {font:900 43px/1 'Pretendard',monospace !important;color:#ffe5a9 !important;text-shadow:0 2px #311c22,0 0 13px rgba(255,193,89,.33);}
+#left-info-panel .v2-floor-state {
+  border:1px solid #ae8555;border-radius:3px;padding:4px 12px;
+  background:#503b30;color:#f8dda4 !important;font:800 11px 'Pretendard',monospace;
+}
+#left-info-panel .v2-floor-state[data-state="cleared"] {border-color:#4fa480;background:#24443c;color:#b8f9d4 !important;}
+#left-info-panel .v2-floor-state[data-state="failed"] {border-color:#c47676;background:#502a33;color:#ffcdcd !important;}
+#left-info-panel .v2-floor-progress {display:block;width:100%;margin-top:10px;}
+#left-info-panel .v2-progress-heading {display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px;color:#ddbb91 !important;font:11px 'Pretendard',monospace;}
+#left-info-panel .v2-progress-heading strong {color:#ffe4a2;font:800 12px monospace;}
+#left-info-panel .v2-progress-track {height:13px;padding:2px;box-sizing:border-box;border:1px solid #966e4d;border-radius:2px;background:#1b1c26;box-shadow:inset 0 2px 3px #101019;overflow:hidden;}
+#left-info-panel #ui-progress-bar {display:block;height:100%;width:0%;background:linear-gradient(90deg,#9e713d,#f0c77f,#fff1bf);box-shadow:0 0 6px #e9b86e;transition:width .35s ease-out;}
+#left-info-panel .v2-info-stats {display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:7px !important;margin-top:12px !important;}
+#left-info-panel .v2-info-stats > div {min-height:70px;display:flex;align-items:center;justify-content:center;padding:8px 3px !important;background:linear-gradient(#4b3732,#30262d) !important;border:1px solid #8b6246 !important;border-radius:3px !important;box-shadow:inset 0 1px 0 rgba(255,214,161,.15),0 2px #231b22;}
+#left-info-panel .v2-info-stats > div > span:first-child {color:#d4bc9e !important;font:700 11px 'Pretendard',monospace;text-align:center;white-space:normal;}
+#left-info-panel .v2-info-stats > div > span:last-child {color:#ffe3ae !important;font:900 16px/1.2 'Pretendard',monospace !important;}
+#left-info-panel .v2-info-stats #info-mimics {color:#ffb0aa !important;}
+#left-info-panel .v2-info-stats #info-sleep {color:#d3b7ff !important;}
+#left-info-panel .v2-info-stats #ui-event-chance {color:#f8ca8f !important;}
+#left-info-panel .v2-info-milestones {display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:6px !important;margin-top:11px !important;padding:10px 4px !important;background:#2b252c !important;border:1px solid #7d6049 !important;border-radius:3px !important;}
+#left-info-panel .v2-info-milestones > div {display:flex;flex-direction:column;align-items:center;gap:6px;min-height:59px;font:11px 'Pretendard',monospace;text-align:center;}
+#left-info-panel .v2-info-milestones > div > span:first-child {color:#cbb39b !important;}
+#left-info-panel #ui-next-rest,#left-info-panel #ui-next-boss {color:#ffe1a1 !important;background:#503b31 !important;border:1px solid #a2754b;border-radius:2px;padding:5px 7px;font:bold 11px 'Pretendard',monospace;}
+#left-info-panel .v2-info-curse-section,#left-info-panel .v2-info-segment-section {border-top:2px solid #815f42 !important;margin-top:10px !important;padding-top:10px !important;}
+#left-info-panel .v2-info-curse-section > span:first-child,#left-info-panel .v2-info-segment-section > span:first-child {color:#f3d29c !important;font:bold 12px 'Pretendard',monospace;text-align:left !important;}
+#left-info-panel #ui-perm-curses > span {background:#492f34 !important;color:#e3c6b0 !important;border:1px solid #835c55;border-radius:2px !important;font-size:10px !important;}
+#left-info-panel .v2-info-segment-section > div > span {background:#46372e !important;color:#e8cc9e !important;border:1px solid #846248;border-radius:2px !important;}
+#left-info-panel .v2-info-log-label {margin-top:12px;padding-bottom:5px;border-bottom:1px solid #936b4a;color:#f7d8a0 !important;font:bold 12px 'Pretendard',monospace;}
+#left-info-panel .v2-info-logs {max-height:200px;overflow:auto;margin-top:0 !important;scrollbar-color:#986b4b #2b252c;}
+#left-info-panel .v2-info-logs:empty::after {content:"특이 사항 없음";display:block;padding:8px;color:#bba28d;font:11px 'Pretendard',monospace;}
+#left-info-panel .v2-info-logs > div {background:linear-gradient(120deg,#4e3430,#3c2b2f) !important;color:#f1d4ab !important;border:1px solid #926e4e !important;border-radius:2px !important;font:11px/1.5 'Pretendard',monospace !important;padding:7px !important;}
+@media(prefers-reduced-motion:reduce){#left-info-panel #ui-progress-bar{transition:none;}}
