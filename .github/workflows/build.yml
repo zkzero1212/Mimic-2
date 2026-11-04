@@ -31,6 +31,12 @@ jobs:
           test -f css/main.css
           test -f js/game.js
           test -f js/firebase.js
+          test -f css/asset-ui-v0.08g.css
+          test -f assets/ui-v2/backgrounds/board_normal_4f_660ms.webp
+          test -f assets/ui-v2/frames/info_panel_frame.png
+          test -f assets/ui-v2/frames/toolbar_frame_empty.png
+          test -f assets/ui-v2/speech/speech_bubble_blank.png
+          test -f assets/ui-v2/frames/title_plate_mimic_v2.png
 
       - name: Check JavaScript syntax
         run: |
@@ -40,5 +46,6 @@ jobs:
       - name: Check local asset references
         run: |
           grep -Fq 'href="css/main.css"' index.html
+          grep -Fq 'href="css/asset-ui-v0.08g.css"' index.html
           grep -Fq 'src="js/firebase.js"' index.html
           grep -Fq 'src="js/game.js"' index.html

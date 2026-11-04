@@ -1,0 +1,337 @@
+/* Mimic V2 v0.08g — approved-art asset integration.
+   All visible framing comes from the approved asset set, NOT imitation CSS boxes.
+   Preserve all existing IDs, chest layout, link SVG and game handlers. */
+:root{--v2-ui-path:"../assets/ui-v2";}
+html{background:#191420!important}
+body{
+  color:#f4dfbb!important;
+  background:
+    radial-gradient(ellipse at 47% 36%,rgba(95,59,82,.23),transparent 69%),
+    repeating-linear-gradient(0deg,transparent 0 39px,rgba(202,142,98,.045) 40px 42px,transparent 43px 78px),
+    repeating-linear-gradient(90deg,transparent 0 74px,rgba(211,149,105,.035) 75px 77px,transparent 78px 145px),
+    #221a29!important
+}
+body::after{
+  content:"";position:fixed;z-index:95;pointer-events:none;inset:0;
+  background:url("../assets/ui-v2/decoration/full_screen_border.png") center/100% 100% no-repeat
+}
+body>div:first-of-type{
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:12px 28px 22px!important;
+  max-width:1680px!important;
+  width:100%!important
+}
+/* Exact text-bearing title plate from final mockup. Keep heading accessible. */
+body>div:first-of-type>header{
+  width:330px!important;
+  height:94px!important;
+  min-height:0!important;
+  margin:0 auto -13px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:url("../assets/ui-v2/frames/title_plate_mimic_v2.png") center/contain no-repeat!important;
+  box-shadow:none!important;
+  z-index:50!important
+}
+body>div:first-of-type>header::before,
+body>div:first-of-type>header::after{content:none!important}
+body>div:first-of-type>header h1{
+  opacity:0!important;
+  color:transparent!important;
+  -webkit-text-fill-color:transparent!important;
+  text-shadow:none!important
+}
+/* One stage / one information panel — no separate orange website canvas. */
+body>div:first-of-type>.grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 320px!important;
+  gap:11px!important;
+  align-items:start!important
+}
+body>div:first-of-type>.grid>#left-info-panel+div{
+  display:flex!important;
+  flex-direction:column!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  align-items:stretch!important;
+  padding:0!important;
+  width:100%!important
+}
+body>div:first-of-type>.grid>#left-info-panel{
+  grid-column:2!important;
+  grid-row:1!important;
+  margin:25px 0 0!important;
+  padding:104px 19px 27px!important;
+  min-height:710px!important;
+  width:100%!important;
+  border:0!important;
+  border-radius:0!important;
+  background:url("../assets/ui-v2/frames/info_panel_frame.png") center top/100% 100% no-repeat!important;
+  box-shadow:none!important;
+  color:#f9e1bc!important;
+  gap:7px!important
+}
+body>div:first-of-type>.grid>#left-info-panel::before,
+body>div:first-of-type>.grid>#left-info-panel::after{content:none!important}
+#left-info-panel .v2-info-heading{
+  position:absolute!important;
+  top:72px!important;
+  left:25px!important;
+  right:25px!important;
+  width:auto!important;
+  min-height:22px!important;
+  margin:0!important;
+  padding:0!important;
+  background:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important
+}
+#left-info-panel .v2-info-heading>span:first-child{display:none!important}
+#left-info-panel .v2-info-heading .v2-build-version{
+  margin:0!important;padding:2px 5px!important;
+  font-size:9px!important;letter-spacing:0!important;
+  border:1px solid #a9794d!important;background:#30202b!important;
+  color:#f2ce94!important
+}
+#left-info-panel .v2-info-heading>span:last-child{
+  background:#43303a!important;border:1px solid #a9794d!important;
+  color:#f6d399!important; font-size:9px!important; padding:2px 5px!important
+}
+#left-info-panel .v2-floor-hero{
+  padding:11px 8px 13px!important;
+  margin:0!important;
+  background:linear-gradient(#402936,#2a202d)!important;
+  border:1px solid #84563e!important;
+  border-radius:3px!important;
+  box-shadow:inset 0 0 0 2px #281b2a!important
+}
+#left-info-panel #ui-floor{font-family:Georgia,serif!important;color:#fbe2a9!important}
+#left-info-panel .v2-info-stats{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;margin:4px 0 3px!important
+}
+#left-info-panel .v2-info-stats>div{
+  min-height:61px!important;padding:8px 5px!important;
+  background:url("../assets/ui-v2/frames/small_card_blank.png") center/100% 100% no-repeat!important;
+  border:0!important;box-shadow:none!important;
+  gap:0!important
+}
+#left-info-panel .v2-info-stats>div>span:first-child{font-size:11px!important;color:#dcbf92!important}
+#left-info-panel .v2-info-stats>div>span:last-child{font-size:16px!important}
+#left-info-panel .v2-info-milestones{
+  background:linear-gradient(#35252f,#261b29)!important;
+  margin:5px 0!important;padding:8px 4px!important
+}
+#left-info-panel .v2-info-curse-section,
+#left-info-panel .v2-info-segment-section{
+  margin-top:2px!important;padding-top:8px!important
+}
+#left-info-panel .v2-info-log-label{margin-top:8px!important}
+#left-info-panel .v2-info-logs{max-height:155px!important}
+/* Small icons are genuine image sprites; keep numerical data live in HTML. */
+#left-info-panel .v2-info-stats>div::before{
+  content:"";display:block;width:27px;height:25px;margin:-3px auto 1px;
+  background-position:center;background-repeat:no-repeat;background-size:contain
+}
+#left-info-panel .v2-info-stats>div:nth-child(1)::before{background-image:url("../assets/ui-v2/icons/icon_chest.png")}
+#left-info-panel .v2-info-stats>div:nth-child(2)::before{background-image:url("../assets/ui-v2/icons/icon_mimic.png")}
+#left-info-panel .v2-info-stats>div:nth-child(3)::before{background-image:url("../assets/ui-v2/icons/icon_sleep.png")}
+#left-info-panel .v2-info-stats>div:nth-child(4)::before{background-image:url("../assets/ui-v2/icons/icon_event.png")}
+/* Approved wide board with its own carved frame, banners and torches. */
+#info-treasures-list{
+  background:url("../assets/ui-v2/frames/treasure_strip_blank.png") center/100% 100% no-repeat!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  min-height:38px!important;
+  padding:5px 16px!important;
+  margin:0 0 2px!important
+}
+#info-treasures-list>div{
+  background:linear-gradient(#644034,#392631)!important;
+  border:1px solid #b17c4c!important;
+  border-radius:3px!important;
+  padding:2px 9px!important;
+  font-size:11px!important
+}
+.v2-board-stage{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  position:relative!important;
+  isolation:isolate!important
+}
+.v2-board-stage .v2-dungeon-marquee{display:none!important}
+.v2-board-stage #chests-container{
+  width:100%!important;
+  max-width:none!important;
+  height:auto!important;
+  min-height:0!important;
+  aspect-ratio:16/9!important;
+  margin:0!important;
+  padding:10% 12% 18%!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:0!important;
+  background-color:#302537!important;
+  background-image:url("../assets/ui-v2/backgrounds/board_normal_4f_660ms.webp")!important;
+  background-size:100% 100%!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  box-shadow:none!important
+}
+.v2-board-stage.v2-boss-floor #chests-container{
+  background-image:linear-gradient(rgba(131,26,37,.16),rgba(37,7,21,.16)),url("../assets/ui-v2/backgrounds/board_normal_4f_660ms.webp")!important;
+  background-size:100% 100%,100% 100%!important
+}
+/* The torches are part of the artwork. Never duplicate them with CSS. */
+.v2-board-stage #chests-container::before,
+.v2-board-stage #chests-container::after{content:none!important;display:none!important;animation:none!important}
+/* Speech bubble from concept asset; text remains editable/clickable HTML. */
+#chests-container .v2-board-item .v2-speech-card{
+  box-sizing:border-box!important;
+  min-height:85px!important;
+  padding:12px 11px 20px!important;
+  border:0!important;
+  border-radius:0!important;
+  color:#321e1b!important;
+  background:url("../assets/ui-v2/speech/speech_bubble_blank.png") center/100% 100% no-repeat!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+  line-height:1.25!important;
+  overflow-wrap:anywhere
+}
+#chests-container .v2-board-item .v2-speech-card::after{content:none!important;display:none!important}
+#chests-container .v2-board-item .v2-speech-card:hover,
+#chests-container .v2-board-item .v2-speech-card.v2-link-source-selected{
+  filter:brightness(1.10) drop-shadow(0 0 6px #e8b85b)!important;
+  box-shadow:none!important
+}
+/* Actual toolbar frame, no CSS-made fake brass rectangle. */
+#game-tool-palette.v2-game-tool-palette{
+  position:absolute!important;
+  left:50%!important;right:auto!important;
+  bottom:1.5%!important;top:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(91%,1177px)!important;
+  max-width:calc(100% - 32px)!important;
+  min-height:111px!important;
+  margin:0!important;
+  padding:27px 26px 11px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:url("../assets/ui-v2/frames/toolbar_frame_empty.png") center/100% 100% no-repeat!important;
+  box-shadow:none!important;
+  color:#f8e5c2!important;
+  grid-template-columns:minmax(155px,1fr) minmax(0,2.06fr)!important;
+  gap:4px 0!important;
+  z-index:45!important
+}
+#game-tool-palette::before,#game-tool-palette::after{content:none!important;display:none!important}
+#game-tool-palette .v2-palette-crest{display:none!important}
+#game-tool-palette #link-color-picker.v2-link-color-picker{
+  border-right:1px solid #ba7e4b!important;gap:3px!important
+}
+#game-tool-palette #mark-tools.v2-mark-tools{
+  grid-template-columns:minmax(111px,1fr) minmax(185px,1.45fr)!important
+}
+#game-tool-palette #mark-tools .v2-palette-section:first-child{border-right:1px solid #ba7e4b!important}
+#game-tool-palette .v2-palette-section{gap:3px!important}
+#game-tool-palette .v2-palette-heading{
+  min-width:86px!important;
+  height:25px!important;
+  padding:0!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:center/contain no-repeat!important;
+  color:transparent!important;text-shadow:none!important;
+  font-size:0!important
+}
+#game-tool-palette #link-color-picker .v2-palette-heading{background-image:url("../assets/ui-v2/buttons/tab_links.png")!important}
+#game-tool-palette #mark-tools .v2-palette-section:first-child .v2-palette-heading{background-image:url("../assets/ui-v2/buttons/tab_marks.png")!important}
+#game-tool-palette #mark-tools .v2-palette-section:last-child .v2-palette-heading{background-image:url("../assets/ui-v2/buttons/tab_memo.png")!important}
+#game-tool-palette .v2-palette-buttons{gap:4px!important}
+#game-tool-palette .v2-link-color-option,
+#game-tool-palette .v2-mark-tool-group button{
+  width:38px!important;
+  min-width:38px!important;
+  height:38px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background-color:transparent!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  background-size:contain!important;
+  color:transparent!important;
+  text-shadow:none!important;
+  font-size:0!important
+}
+#game-tool-palette .v2-link-color-dot{display:none!important}
+#game-tool-palette [data-link-color="gold"]{background-image:url("../assets/ui-v2/buttons/color_gold.png")!important}
+#game-tool-palette [data-link-color="mint"]{background-image:url("../assets/ui-v2/buttons/color_cyan.png")!important}
+#game-tool-palette [data-link-color="violet"]{background-image:url("../assets/ui-v2/buttons/color_violet.png")!important}
+#game-tool-palette [data-link-color="coral"]{background-image:url("../assets/ui-v2/buttons/color_coral.png")!important}
+#game-tool-palette [data-mark-value="O"]{background-image:url("../assets/ui-v2/buttons/mark_o.png")!important}
+#game-tool-palette [data-mark-value="X"]{background-image:url("../assets/ui-v2/buttons/mark_x.png")!important}
+#game-tool-palette [data-mark-value="?"]{background-image:url("../assets/ui-v2/buttons/mark_question.png")!important}
+#game-tool-palette [data-memo-value="1"]{background-image:url("../assets/ui-v2/buttons/memo_1.png")!important}
+#game-tool-palette [data-memo-value="2"]{background-image:url("../assets/ui-v2/buttons/memo_2.png")!important}
+#game-tool-palette [data-memo-value="3"]{background-image:url("../assets/ui-v2/buttons/memo_3.png")!important}
+#game-tool-palette [data-memo-value="4"]{background-image:url("../assets/ui-v2/buttons/memo_4.png")!important}
+#game-tool-palette [data-memo-value="5"]{background-image:url("../assets/ui-v2/buttons/memo_5.png")!important}
+#game-tool-palette .v2-link-color-option.is-active,
+#game-tool-palette .v2-mark-tool-group button[aria-pressed="true"]{
+  border:0!important;
+  background-color:transparent!important;
+  box-shadow:none!important;
+  filter:brightness(1.15) drop-shadow(0 0 3px #ffd775)!important;
+  outline:2px solid #f4d287!important;outline-offset:-2px!important
+}
+#game-tool-palette .v2-link-color-option:hover,
+#game-tool-palette .v2-mark-tool-group button:hover:not(:disabled){filter:brightness(1.19)!important}
+#game-tool-palette .v2-palette-feedback{
+  grid-column:1/-1!important;
+  gap:9px!important;
+  margin:0!important;
+  padding-top:1px!important;
+  border:0!important
+}
+#game-tool-palette .v2-link-color-hint,
+#game-tool-palette .v2-mark-target-label{font-size:9px!important;color:#f2d29d!important}
+/* Keep the no-layout-shift, screen-top fixed result from v0.08d. */
+#floor-result-overlay .v2-floor-result-card{
+  background-image:url("../assets/ui-v2/frames/result_popup_blank.png")!important;
+  background-size:100% 100%!important;
+  background-position:center!important;
+  background-repeat:no-repeat!important;
+  border:0!important;
+  box-shadow:none!important
+}
+/* Dense grid can dock below board to avoid covering any statement. */
+.v2-board-stage.v2-palette-inline{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important
+}
+.v2-board-stage.v2-palette-inline #game-tool-palette.v2-game-tool-palette{
+  position:relative!important;
+  left:auto!important;bottom:auto!important;
+  transform:none!important;
+  margin:-2px auto 12px!important
+}
+@media(max-width:1250px){
+  body{min-width:980px!important}
+  body>div:first-of-type>.grid{grid-template-columns:minmax(0,1fr) 270px!important;gap:6px!important}
+  body>div:first-of-type>.grid>#left-info-panel{padding:94px 13px 17px!important}
+  #game-tool-palette.v2-game-tool-palette{padding:24px 14px 8px!important}
+  #game-tool-palette .v2-link-color-option,
+  #game-tool-palette .v2-mark-tool-group button{width:31px!important;min-width:31px!important;height:31px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #game-tool-palette .v2-link-color-option{transition:none!important}
+}
