@@ -48,4 +48,4 @@ jobs:
           grep -Fq 'href="css/main.css"' index.html
           grep -Fq 'href="css/asset-ui-v0.08g.css"' index.html
           grep -Fq 'src="js/firebase.js"' index.html
-          grep -Fq 'src="js/game.js"' index.html
+          grep -Fq 'src="js/game.js?v=0.08i"' index.html
