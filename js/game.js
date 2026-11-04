@@ -1496,7 +1496,7 @@
             const color = CHEST_SPRITE_COLORS.has(colorKey) ? colorKey : "yellow";
             const state = isOpen ? (isMimic ? "mimic" : "open")
                 : (isSleeping ? "sleeping" : "closed");
-            return `assets/chests/chest_${color}_${state}.png`;
+            return `assets/chests/chest_${color}_${state}.png?v=0.08h`;
         }
 
         function renderChests(targetContainer = container, boardData = chestsData, isPreview = false) {
