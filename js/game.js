@@ -161,6 +161,7 @@
 
         let chestsData = []; 
         let currentGridLayout = null;
+        let boardFitObserver = null;
         let totalOpened = 0;
         let totalTrueChests = 0;
         let hoveredChestIdx = null;
@@ -1499,15 +1500,42 @@
             return `assets/chests/chest_${color}_${state}.png?v=0.08h`;
         }
 
+        // Fit the entire formation inside the playable floor (not the torch walls or HUD).
+        // Scaling the whole formation retains speech/chest/link alignment and click hitboxes.
+        function fitBoardFormation(board, formation, rows, stage) {
+            const bw = board.clientWidth;
+            const bh = board.clientHeight;
+            if (!bw || !bh || !formation.isConnected) return;
+            const nativeW = Math.max(formation.scrollWidth, formation.offsetWidth, 1);
+            const nativeH = Math.max(formation.scrollHeight, formation.offsetHeight, 1);
+            const availableW = bw * .77; // leave stone wall + torch margins visible
+            const scaleWithToolbar = Math.min(1, availableW / nativeW, bh * .57 / nativeH);
+            const dockToolbar = rows >= 3 || scaleWithToolbar < .77;
+            stage.classList.toggle("v2-palette-inline", dockToolbar);
+            const availableH = bh * (dockToolbar ? .78 : .57);
+            const scale = Math.max(.05, Math.min(1, availableW / nativeW, availableH / nativeH));
+            formation.style.setProperty("--v2-fit-scale", scale.toFixed(4));
+            formation.style.setProperty("--v2-fit-center-y", dockToolbar ? "49%" : "40%");
+            formation.classList.toggle("is-dense", rows >= 3);
+        }
+
         function renderChests(targetContainer = container, boardData = chestsData, isPreview = false) {
+            if (!isPreview && boardFitObserver) {
+                boardFitObserver.disconnect();
+                boardFitObserver = null;
+            }
             targetContainer.innerHTML = '';
-            targetContainer.style.overflow = 'visible';
+            targetContainer.style.overflow = isPreview ? 'visible' : 'hidden';
             targetContainer.style.maxWidth = '100%';
             const horizontalScroller = document.createElement('div');
-            horizontalScroller.className = "w-full max-w-full overflow-x-auto overflow-y-visible pt-4 pb-2";
+            horizontalScroller.className = isPreview
+                ? "w-full max-w-full overflow-x-auto overflow-y-visible pt-4 pb-2"
+                : "v2-board-viewport";
             const rowsWrapper = document.createElement('div');
-            rowsWrapper.className = "flex flex-col gap-1 items-center w-max min-w-0 mx-auto";
-            rowsWrapper.style.position = "relative";
+            rowsWrapper.className = isPreview
+                ? "flex flex-col gap-1 items-center w-max min-w-0 mx-auto"
+                : "v2-board-formation flex flex-col gap-1 items-center w-max min-w-0 mx-auto";
+            rowsWrapper.style.position = isPreview ? "relative" : "absolute";
             horizontalScroller.appendChild(rowsWrapper);
             targetContainer.appendChild(horizontalScroller);
             const numChests = boardData.length;
@@ -1521,6 +1549,7 @@
                 layout = boardData[0]?.gridLayout || getGridLayout(numChests);
             }
             const rows = layout.rows;
+            rowsWrapper.dataset.honeycomb = String(layout.honeycomb);
             const rowGroups = Array.from({length: rows}, () => []); layout.pos.forEach(([r, c], idx) => { rowGroups[r].push(idx); });
 
             for (let r = 0; r < rows; r++) {
@@ -1531,7 +1560,8 @@
                 // 실제 상자 래퍼 폭(8rem)에 맞춰 트랙을 줄여 화면에서 상자 사이 간격을 축소합니다.
                 // 벌집형은 상자당 2트랙이므로 4rem, 일반형은 8.5rem으로 설정합니다.
                 const gridTrack = layout.honeycomb ? 2.5 : 8.5;
-                rowContainer.style.gridTemplateColumns = `repeat(${layout.honeycomb ? layout.cols * 2 : layout.cols}, ${gridTrack}rem)`;
+                rowContainer.style.setProperty('grid-template-columns',
+                    `repeat(${layout.honeycomb ? layout.cols * 2 : layout.cols}, ${gridTrack}rem)`, 'important');
                 rowContainer.style.columnGap = '0px';
                 rowContainer.style.flexShrink = "0";
                 rowGroups[r].sort((a, b) => layout.pos[a][1] - layout.pos[b][1]);
@@ -1599,6 +1629,11 @@
                     if (!chest.isOpen && boxShadows.length > 0) {
                         btnChest.style.boxShadow = boxShadows.join(", ");
                     }
+                    // Separate shadow element: the button's ::after is reserved for reveal effects.
+                    const groundShadow = document.createElement("span");
+                    groundShadow.className = "v2-chest-ground-shadow";
+                    groundShadow.setAttribute("aria-hidden", "true");
+                    btnChest.appendChild(groundShadow);
                     const sprite = document.createElement("img");
                     sprite.src = getChestSpritePath(chest.color, chest.isOpen, displayAsMimic, chest.isSleeping);
                     sprite.className = `v2-chest-pixel-art ${chest.isOpen ? (displayAsMimic ? "mimic-shake" : "chest-bounce") : ""}`;
@@ -1686,20 +1721,18 @@
             }
             if (!isPreview && statementLinks.length) drawStatementLinks(rowsWrapper);
             if (!isPreview) {
-                // 큰 상자 배치가 하단 HUD와 겹칠 때만 팔레트를 게임판 아래로 내립니다.
-                // 판 크기와 상자 중앙정렬은 변경하지 않습니다.
+                // The fixed 16:9 board never scrolls: fit every chest and statement at once.
+                // On dense formations the tool palette docks below the board to free floor space.
                 const stage = targetContainer.closest(".v2-board-stage");
                 if (stage) {
-                    stage.classList.remove("v2-palette-inline");
-                    const palette = stage.querySelector("#game-tool-palette");
-                    if (palette) {
-                        const boardBounds = rowsWrapper.getBoundingClientRect();
-                        const paletteBounds = palette.getBoundingClientRect();
-                        const overlaps = boardBounds.left < paletteBounds.right - 6
-                            && boardBounds.right > paletteBounds.left + 6
-                            && boardBounds.top < paletteBounds.bottom - 6
-                            && boardBounds.bottom > paletteBounds.top + 6;
-                        stage.classList.toggle("v2-palette-inline", overlaps);
+                    const fit = () => fitBoardFormation(targetContainer, rowsWrapper, rows, stage);
+                    fit();
+                    if (typeof ResizeObserver !== "undefined") {
+                        boardFitObserver = new ResizeObserver(fit);
+                        boardFitObserver.observe(targetContainer);
+                    } else {
+                        // Keep old browsers usable; a rerender also recalculates the fit.
+                        window.addEventListener("resize", fit, {once:true});
                     }
                 }
                 recentRevealIdx = null; // one visual burst only, not on subsequent renders

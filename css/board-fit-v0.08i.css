@@ -1,0 +1,88 @@
+/* Mimic V2 v0.08i - ground contact shadows and no-scroll formation fitting.
+   Keep approved 16:9 board art, frame, toolbar and live interaction surfaces intact. */
+
+/* Replace the old horizontal scroller with an absolutely positioned canvas.
+   This viewport follows the existing 16:9 board and never changes its dimensions. */
+#chests-container > .v2-board-viewport {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  display:block!important;
+  box-sizing:border-box!important;
+  z-index:2;
+}
+#chests-container > .v2-board-viewport > .v2-board-formation {
+  position:absolute!important;
+  left:50%!important;
+  top:var(--v2-fit-center-y,40%)!important;
+  width:max-content!important;
+  min-width:0!important;
+  height:max-content!important;
+  min-height:0!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  transform:translate(-50%,-50%) scale(var(--v2-fit-scale,1))!important;
+  transform-origin:center center!important;
+  overflow:visible!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+}
+/* An old !important grid-template-columns:unset was suppressing the authored
+   row tracks; JS now sets its per-layout tracks as inline !important. */
+#chests-container .v2-board-formation > div {
+  display:grid!important;
+  flex-shrink:0!important;
+  width:max-content!important;
+  min-width:0!important;
+  max-width:none!important;
+  margin-inline:auto!important;
+}
+#chests-container .v2-board-formation .v2-board-item {
+  box-sizing:border-box!important;
+  padding:3px!important;
+}
+#chests-container .v2-board-formation.is-dense .v2-speech-card {
+  height:80px!important;
+  min-height:80px!important;
+  padding:10px 8px 15px!important;
+  font-size:11px!important;
+  line-height:1.18!important;
+}
+/* Two-layer grounded shadow. No repainting any 128px chest sprite. */
+#chests-container .v2-board-item .v2-chest-sprite {
+  isolation:isolate;
+}
+#chests-container .v2-board-item .v2-chest-ground-shadow {
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:5px;
+  width:66%;
+  height:12px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:rgba(9,5,16,.70);
+  box-shadow:0 3px 9px 5px rgba(8,5,15,.26);
+  filter:blur(3px);
+  z-index:0;
+  pointer-events:none;
+}
+#chests-container .v2-board-item .v2-chest-pixel-art {
+  position:relative;
+  z-index:1;
+}
+/* Hover lift works independently of the stationary shadow. */
+#chests-container .v2-board-item .v2-chest-sprite:hover .v2-chest-ground-shadow {
+  opacity:.82;
+}
